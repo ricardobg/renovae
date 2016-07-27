@@ -21,7 +21,7 @@ Funcionalidades
 ##Versão 2.0
 
 Implementar pra outra faculdade: FMU ou UNESP para tentar fazer a interface mais genérica.
-
+Pensar também em funcionar para mais versões do Android.
 
 O que implementar?
 - Talvez rever a interface
