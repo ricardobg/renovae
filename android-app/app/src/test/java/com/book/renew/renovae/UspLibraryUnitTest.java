@@ -30,7 +30,8 @@ import static org.junit.Assert.*;
 public class UspLibraryUnitTest {
     @Test
     public void url() throws Exception {
-        /*UspLibrary l = new UspLibrary();
+        UspLibrary l = new UspLibrary();
+        /*
         List<IBorrow> borrows = l.getBorrowedBooks();
         for (IBorrow b : borrows) {
             System.out.println(b);
