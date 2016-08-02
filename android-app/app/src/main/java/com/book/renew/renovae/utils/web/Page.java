@@ -36,6 +36,7 @@ public class Page {
     }
 
     public Page(String url, Method method, List<Param> get_params, List<Param> post_params) throws IOException {
+        //TODO: Network sign on
         HttpURLConnection conn = null;
         StringBuffer ret = new StringBuffer();
         try {
@@ -52,9 +53,9 @@ public class Page {
             //Creates URL
             URL url_obj = new URL(url);
             conn = (HttpURLConnection) url_obj.openConnection();
-            conn.setDoOutput(true);
             //Check post parameters
             if (method == Method.POST && post_params != null && post_params.size() > 0) {
+                conn.setDoOutput(true);
                 conn.setRequestMethod("POST");
                 //Read post parameters
                 byte[] post_data = buildParamsString(post_params).getBytes("UTF-8");

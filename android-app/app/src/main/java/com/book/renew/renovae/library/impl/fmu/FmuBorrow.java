@@ -1,8 +1,9 @@
-package com.book.renew.renovae.library.api.fmu;
+package com.book.renew.renovae.library.impl.fmu;
 
 import com.book.renew.renovae.library.Book;
-import com.book.renew.renovae.library.api.IBorrow;
-import com.book.renew.renovae.library.api.UnexpectedPageContent;
+import com.book.renew.renovae.library.IBorrow;
+import com.book.renew.renovae.library.exception.RenewException;
+import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 
 import java.io.IOException;
 import java.util.Date;
@@ -18,7 +19,7 @@ public class FmuBorrow extends IBorrow {
         _renew_link = renew_link;
     }
     @Override
-    public void renew() throws IOException, UnexpectedPageContent {
+    public void renew() throws IOException, UnexpectedPageContent, RenewException {
         //TODO: renovar
     }
 }

@@ -3,9 +3,9 @@ package com.book.renew.renovae;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.book.renew.renovae.library.api.ILibrary;
-import com.book.renew.renovae.library.api.UnexpectedPageContent;
-import com.book.renew.renovae.library.api.usp.UspLibrary;
+import com.book.renew.renovae.library.ILibrary;
+import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+import com.book.renew.renovae.library.impl.usp.UspLibrary;
 
 import java.io.IOException;
 

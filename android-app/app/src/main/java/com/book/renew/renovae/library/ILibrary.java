@@ -1,7 +1,9 @@
-package com.book.renew.renovae.library.api;
+package com.book.renew.renovae.library;
 
 
-import java.io.IOError;
+import com.book.renew.renovae.library.exception.LoginException;
+import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+
 import java.io.IOException;
 import java.util.List;
 

@@ -1,6 +1,7 @@
-package com.book.renew.renovae.library.api;
+package com.book.renew.renovae.library;
 
-import com.book.renew.renovae.library.Book;
+import com.book.renew.renovae.library.exception.RenewException;
+import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.utils.Util;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ public abstract class IBorrow {
         _due_date = due_date;
     }
 
-    public abstract void renew() throws IOException, UnexpectedPageContent;
+    public abstract void renew() throws IOException, UnexpectedPageContent, RenewException;
 
     public Book getBook() {
         return _book;
