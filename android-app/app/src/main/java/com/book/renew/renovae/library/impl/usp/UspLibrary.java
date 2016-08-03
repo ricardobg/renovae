@@ -1,5 +1,7 @@
 package com.book.renew.renovae.library.impl.usp;
 
+import android.util.Log;
+
 import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.ILibrary;
@@ -14,6 +16,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,9 +30,10 @@ import java.util.regex.Pattern;
 /**
  * Created by ricardo on 27/07/16.
  */
-public class UspLibrary implements ILibrary {
+public class UspLibrary extends ILibrary {
     public static final String HOMEPAGE = "http://dedalus.usp.br/F";
     public static final Pattern FIND_LOGIN_PAGE = Pattern.compile(".*\\&url=([^\']+)\\?.*", Pattern.MULTILINE | Pattern.DOTALL);
+    public static final Pattern FIND_LOGIN_PAGE_ALT = Pattern.compile("([^\\?]+)\\?.*", Pattern.MULTILINE | Pattern.DOTALL);
     public static final Pattern FIND_NUMBER_OF_LOANS = Pattern.compile("^\\s*DEDALUS\\s*\\-\\s*([0-9]+)\\s*$", Pattern.MULTILINE | Pattern.DOTALL);
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
     private String _login_url;
@@ -37,10 +41,20 @@ public class UspLibrary implements ILibrary {
     public UspLibrary() throws UnexpectedPageContent, IOException {
         //First, download page and get the links
         Page homepage = new Page(HOMEPAGE);
-        Elements script = homepage.getDoc().select("html > head > script");
-        if (script.isEmpty())
-            throw new UnexpectedPageContent("Página de login não encontrada");
-        Matcher mt = FIND_LOGIN_PAGE.matcher(script.html());
+        Elements login_button = homepage.getDoc().select("table:first-of-type > tbody > tr.middlebar > td.middlebar a.blue:matches(.*Sign-in.*");
+        Matcher mt = null;
+        if (login_button.size() != 1) {
+            //Não caiu na página Aleph
+            Elements script = homepage.getDoc().select("html > head > script");
+            if (script.size() != 1)
+                throw new UnexpectedPageContent("Página inesperada");
+            mt = FIND_LOGIN_PAGE.matcher(script.html());
+        }
+        else {
+            mt = FIND_LOGIN_PAGE_ALT.matcher(login_button.attr("href"));
+            System.out.println(login_button.attr("href"));
+        }
+
         if (!mt.matches())
             throw new UnexpectedPageContent("Página de login não encontrada");
         _login_url = mt.group(1);

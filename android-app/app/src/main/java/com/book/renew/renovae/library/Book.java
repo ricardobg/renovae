@@ -1,10 +1,12 @@
 package com.book.renew.renovae.library;
 
+import java.io.Serializable;
+
 /**
  * Created by ricardo on 27/07/16.
  * Classe que representa um livro
  */
-public class Book {
+public class Book implements Serializable {
     private String _isbn;
     private String _title;
     private String _authors;

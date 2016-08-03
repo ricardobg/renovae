@@ -15,7 +15,7 @@ public class UspLibraryUnitTest {
     @Test
     public void url() throws Exception {
         UspLibrary l = new UspLibrary();
-
+        l.login("8041992", "0604");
      //   List<IBorrow> borrows = l.getBorrowedBooks();
      //   for (IBorrow b : borrows) {
      //       System.out.println(b);

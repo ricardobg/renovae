@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Created by ricardo on 29/07/16.
  */
-public class FmuLibrary implements ILibrary {
+public class FmuLibrary extends ILibrary {
     public static final String HOMEPAGE = "http://200.229.239.12/F/";
     public static final Pattern FIND_NUMBER_OF_LOANS = Pattern.compile("^\\s*Administrativa\\s*\\-\\s*([0-9]+)\\s*$", Pattern.MULTILINE | Pattern.DOTALL);
     public static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd/MM/yy HH:mm");

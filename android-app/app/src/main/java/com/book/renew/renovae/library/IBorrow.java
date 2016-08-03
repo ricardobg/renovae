@@ -5,13 +5,14 @@ import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.utils.Util;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by ricardo on 27/07/16.
  * Representa um empréstimo, deve ser implementado para cada universidade
  */
-public abstract class IBorrow {
+public abstract class IBorrow implements Serializable {
 
     protected Book _book;
     protected Date _borrow_date;
