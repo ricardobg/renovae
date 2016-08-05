@@ -14,8 +14,8 @@ import java.util.Date;
 public class FmuBorrow extends IBorrow {
 
     private String _renew_link;
-    public FmuBorrow(Book book, Date borrow_date, Date due_date, String renew_link) {
-        super(book, borrow_date, due_date);
+    public FmuBorrow(Book book, Date due_date, String renew_link) {
+        super(book, due_date);
         _renew_link = renew_link;
     }
     @Override

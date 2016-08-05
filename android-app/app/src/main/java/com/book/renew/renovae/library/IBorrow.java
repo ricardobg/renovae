@@ -15,13 +15,11 @@ import java.util.Date;
 public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
 
     protected Book _book;
-    protected Date _borrow_date;
     protected Date _due_date;
 
 
-    public IBorrow(Book book, Date borrow_date, Date due_date) {
+    public IBorrow(Book book, Date due_date) {
         _book = book;
-        _borrow_date = borrow_date;
         _due_date = due_date;
     }
 
@@ -30,9 +28,6 @@ public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
     public Book getBook() {
         return _book;
     }
-    public Date getBorrowDate() {
-        return _borrow_date;
-    }
     public Date getDueDate() {
         return _due_date;
     }
@@ -40,7 +35,6 @@ public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
     @Override
     public String toString() {
         return "Empréstimo do livro " + _book.getTitle()
-                + " realizado em " + Util.FULL_YEAR_DATE_FORMAT.format(_borrow_date)
                 + " com vencimento em " + Util.FULL_YEAR_DATE_FORMAT.format(_due_date);
 
     }

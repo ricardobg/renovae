@@ -15,8 +15,8 @@ import java.util.Date;
  */
 public class UspBorrow extends IBorrow {
     private String _renew_link;
-    public UspBorrow(Book book, Date borrow_date, Date due_date, String renew_link) {
-        super(book, borrow_date, due_date);
+    public UspBorrow(Book book, Date due_date, String renew_link) {
+        super(book, due_date);
         _renew_link = renew_link;
     }
 

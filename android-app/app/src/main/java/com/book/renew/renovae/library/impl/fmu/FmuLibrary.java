@@ -104,13 +104,13 @@ public class FmuLibrary extends ILibrary {
                     tds.eq(3).text().indexOf('/')), tds.eq(2).text());
             Date due_date = tryParse(tds.eq(5).text());
             String borrow_url = tds.eq(0).select("a").attr("href");
-            Page borrow_page = new Page(borrow_url);
+           /* Page borrow_page = new Page(borrow_url);
             Elements borrows_tr = borrow_page.getDoc().select("table:nth-last-of-type(2) > tbody > tr");
             if (borrows_tr.size() < 3)
                 throw new UnexpectedPageContent();
-            Date borrow_date = tryParse(borrows_tr.eq(0).select("td").eq(1).text());
+            Date borrow_date = tryParse(borrows_tr.eq(0).select("td").eq(1).text());*/
            // String renew_url = borrows_tr.eq(2).select("td:eq(1) a").attr("href");
-            borrows.add(new UspBorrow(book, borrow_date, due_date, ""));
+            borrows.add(new UspBorrow(book, due_date, ""));
         }
         return borrows;
     }

@@ -27,8 +27,6 @@ public class Book implements Serializable, Comparable<Book> {
         return _edition;
     }
 
-
-
     public Book(String title, String authors) {
         _title = title;
         _authors = authors;

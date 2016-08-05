@@ -8,9 +8,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,12 +23,13 @@ import com.book.renew.renovae.util.Util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class BorrowedBooksActivity extends AppCompatActivity {
 
     private ILibrary _lib = null;
-    private List<IBorrow> _borrows = null;
+    private ArrayList<IBorrow> _borrows = null;
 
     private RecyclerView _borrowsRecyclerView;
     private SwipeRefreshLayout _borrowsSwipeRefresh;
@@ -48,7 +49,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
 
 
         _borrowsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        
+
         _borrowsSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -62,7 +63,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
             _lib = (ILibrary) savedInstanceState.getSerializable(KEY_LIBRARY);
             IBorrow[] tempBorrows = (IBorrow[]) savedInstanceState.getSerializable(KEY_BORROWS);
             if (tempBorrows != null) {
-                _borrows = Arrays.asList(tempBorrows);
+                _borrows = new ArrayList<>(Arrays.asList(tempBorrows));
             }
         }
 
@@ -78,8 +79,10 @@ public class BorrowedBooksActivity extends AppCompatActivity {
             });
             (new BorrowsTask()).execute();
         }
-        else
-            showBorrows();
+        else {
+            _borrowsAdapter = new BorrowsAdapter(_borrows);
+            _borrowsRecyclerView.setAdapter(_borrowsAdapter);
+        }
 
 
 
@@ -110,38 +113,6 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         return intent;
     }
 
-
-    /**
-     * Just show all borrows on screen
-     */
-    private void showBorrows() {
-        if (_borrows == null)
-            displayMessage("Nenhum empréstimo encontrado");
-        else {
-            displayMessage("Você tem " + _borrows.size() + " empréstimo(s)");
-            //Add borrows to recycler view
-            ArrayAdapter adapter = new ArrayAdapter<Object>(this, R.layout.activity_borrow_item, _borrows.toArray());
-            _borrowsListView.setAdapter(adapter);
-
-        }
-    }
-
-    /**
-     * Compares each borrow with the previous list
-     * @param newBorrows new borrows list
-     */
-    private void showBorrows(List<IBorrow> newBorrows) {
-        if (_borrows == null)
-            displayMessage("Nenhum empréstimo encontrado");
-        else {
-            displayMessage("Você tem " + _borrows.size() + " empréstimo(s)");
-            //Add borrows to recycler view
-            ArrayAdapter adapter = new ArrayAdapter<Object>(this, R.layout.activity_borrow_item, _borrows.toArray());
-            _borrowsListView.setAdapter(adapter);
-
-        }
-    }
-
     private void displayMessage(String message) {
         displayMessage(message, false);
     }
@@ -150,22 +121,57 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         Toast.makeText(this, message, long_duration ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
     }
 
-    private class ViewHolder extends RecyclerView.ViewHolder {
-        // each data item is just a string in this case
-        public TextView _titleView;
-        public TextView _authorView;
-        public TextView _dueDateView;
-
-        public ViewHolder(TextView titleView, TextView authorView, TextView dueDateView) {
-            super(titleView, authorView, dueDateView);
-            mTextView = v;
+    private void updateBorrowsRecycler(ArrayList<IBorrow> newBorrows) {
+        if (newBorrows == null) {
+            if (_borrows.size() > 0) {
+                _borrowsAdapter.notifyItemRangeRemoved(0, _borrows.size());
+                _borrows.clear();
+            }
+        }
+        else {
+            //TODO: improve this code
+            if (_borrows == null) {
+                _borrows = newBorrows;
+                _borrowsAdapter = new BorrowsAdapter(_borrows);
+                _borrowsRecyclerView.setAdapter(_borrowsAdapter);
+            }
+            else {
+                _borrows.clear();
+                for (int i = 0; i < newBorrows.size(); i++)
+                    _borrows.add(newBorrows.get(i));
+                _borrowsAdapter.notifyDataSetChanged();
+            }
         }
     }
 
-    private class BorrowsAdapter extends RecyclerView.Adapter<ViewHolder> {
+    private class BorrowsViewHolder extends RecyclerView.ViewHolder {
+        // each data item is just a string in this case
+        public TextView _titleText;
+        public TextView _authorText;
+        public TextView _dueDateText;
 
+        public BorrowsViewHolder(View itemView) {
+            super(itemView);
+            _titleText = (TextView) itemView.findViewById(R.id.borrow_book_title);
+            _authorText = (TextView) itemView.findViewById(R.id.borrow_book_authors);
+            _dueDateText = (TextView) itemView.findViewById(R.id.borrow_due_date);
+        }
 
+        public void setTitle(String title) {
+            _titleText.setText(title);
+        }
 
+        public void setAuthors(String authors) {
+            _authorText.setText(authors);
+        }
+
+        public void setDueDate(Date dueDate) {
+            _dueDateText.setText(Util.FULL_YEAR_DATE_FORMAT.format(dueDate));
+        }
+
+    }
+
+    private class BorrowsAdapter extends RecyclerView.Adapter<BorrowsViewHolder> {
         private ArrayList<IBorrow> _borrows;
 
         public BorrowsAdapter(ArrayList<IBorrow> borrows) {
@@ -173,31 +179,38 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
 
         @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+        public BorrowsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            View borrowView = inflater.inflate(R.layout.activity_borrow_item, parent, false);
+            return new BorrowsViewHolder(borrowView);
         }
 
         @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        public void onBindViewHolder(BorrowsViewHolder holder, int position) {
+            IBorrow borrow = _borrows.get(position);
 
+            holder.setTitle(borrow.getBook().getTitle());
+            holder.setAuthors(borrow.getBook().getAuthors());
+            holder.setDueDate(borrow.getDueDate());
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return _borrows.size();
         }
     }
 
     /**
      * Task to load borrows
      */
-    private class BorrowsTask extends AsyncTask<Void, Void, List<IBorrow>> {
+    private class BorrowsTask extends AsyncTask<Void, Void, ArrayList<IBorrow>> {
         @Override
         protected void onPreExecute() {
         }
 
         @Override
-        protected List<IBorrow> doInBackground(Void... params) {
+        protected ArrayList<IBorrow> doInBackground(Void... params) {
             try {
                 return _lib.getBorrowedBooks();
             } catch (IOException e) {
@@ -212,9 +225,15 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<IBorrow> result) {
+        protected void onPostExecute(ArrayList<IBorrow> result) {
             _borrowsSwipeRefresh.setRefreshing(false);
-            showBorrows(result);
+            //Compare and add new
+            int len = 0;
+            if (result != null)
+                len = result.size();
+            displayMessage("Você tem " + len + " empréstimo(s)");
+            updateBorrowsRecycler(result);
+
         }
     }
 }
