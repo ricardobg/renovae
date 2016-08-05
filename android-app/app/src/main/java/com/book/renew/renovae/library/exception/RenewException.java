@@ -7,4 +7,8 @@ public class RenewException extends Exception {
     public RenewException(String message) {
         super(message);
     }
+
+    protected RenewException() {
+        super();
+    }
 }

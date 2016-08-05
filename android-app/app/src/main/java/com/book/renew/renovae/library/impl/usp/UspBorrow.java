@@ -4,7 +4,8 @@ import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
-import com.book.renew.renovae.utils.web.Page;
+import com.book.renew.renovae.library.exception.renew.UnknownRenewException;
+import com.book.renew.renovae.util.web.Page;
 
 import java.io.IOException;
 import java.util.Date;
@@ -21,8 +22,10 @@ public class UspBorrow extends IBorrow {
 
     public void renew() throws IOException, UnexpectedPageContent, RenewException {
         Page renewed = new Page(_renew_link);
-        String feedback = UspLibrary.getFeedback(renewed);
+        String feedback = UspUtils.getFeedback(renewed);
         if (feedback != null)
             throw new RenewException(feedback);
+        else
+            throw new UnknownRenewException();
     }
 }

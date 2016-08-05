@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="io_error">Problemas de conexão</string>
+    <string name="login_error">Erro no login</string>
+    <string name="unexpected_content_error">Resposta inesperada :O</string>
+</resources>

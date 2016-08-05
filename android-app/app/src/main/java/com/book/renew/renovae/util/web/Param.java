@@ -1,4 +1,4 @@
-package com.book.renew.renovae.utils.web;
+package com.book.renew.renovae.util.web;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

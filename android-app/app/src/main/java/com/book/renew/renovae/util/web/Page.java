@@ -1,6 +1,4 @@
-package com.book.renew.renovae.utils.web;
-
-import android.util.Log;
+package com.book.renew.renovae.util.web;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,9 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ricardo on 28/07/16.

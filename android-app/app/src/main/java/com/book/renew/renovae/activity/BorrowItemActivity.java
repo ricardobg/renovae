@@ -1,7 +1,9 @@
-package com.book.renew.renovae;
+package com.book.renew.renovae.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.book.renew.renovae.R;
 
 public class BorrowItemActivity extends AppCompatActivity {
 

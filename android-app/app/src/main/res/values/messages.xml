@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_in_progress">Fazendo login...</string>
+    <string name="university_missing">Escolha uma faculdade</string>
+    <string name="username_missing">Digite o seu usuário</string>
+    <string name="password_missing">Digite a sua senha</string>
+</resources>

@@ -6,8 +6,8 @@ import com.book.renew.renovae.library.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.impl.usp.UspBorrow;
-import com.book.renew.renovae.utils.web.Page;
-import com.book.renew.renovae.utils.web.Param;
+import com.book.renew.renovae.util.web.Page;
+import com.book.renew.renovae.util.web.Param;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -37,7 +37,7 @@ public class FmuLibrary extends ILibrary {
 
         Elements login_button = homepage.getDoc().select("table > tbody > tr.middlebar > td.middlebar a:matches(\\s*Login\\s*)");
         if (login_button.size() != 1)
-            throw new UnexpectedPageContent("Página de login não encontrada");
+            throw new UnexpectedPageContent();
 
         _login_url = login_button.attr("href");
         _login_url = _login_url.substring(0, _login_url.indexOf("?"));
@@ -66,12 +66,12 @@ public class FmuLibrary extends ILibrary {
         }
         Elements user_page = login_page.getDoc().select("table > tbody > tr.middlebar > td.middlebar > a:matches(\\s*Usu.rio\\s*)");
         if (user_page.size() > 1)
-            throw new UnexpectedPageContent("Não encontrada página do usuário");
+            throw new UnexpectedPageContent();
         //Usuário está logado
     }
 
     @Override
-    public List<IBorrow> getBorrowedBooks() throws IOException, UnexpectedPageContent {
+    public ArrayList<IBorrow> getBorrowedBooks() throws IOException, UnexpectedPageContent {
         Page borrows_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),
@@ -82,24 +82,24 @@ public class FmuLibrary extends ILibrary {
         //Primeiro pega número de empréstimos
         Elements m = borrows_page.getDoc().select("table > tbody > tr:only-of-type > td:only-of-type.td1 > a:matches(Administrativa.*)");
         if (m.size() != 1)
-            throw  new UnexpectedPageContent("Não foi possível verificar o número de empréstimos");
+            throw  new UnexpectedPageContent();
         System.out.println(m.text());
         Matcher mt = FIND_NUMBER_OF_LOANS.matcher(m.text());
         if (!mt.matches())
-            throw  new UnexpectedPageContent("Não foi possível verificar o número de empréstimos");
+            throw  new UnexpectedPageContent();
         int n_borrows = Integer.parseInt(mt.group(1));
         if (n_borrows == 0)
             return new ArrayList<>();
         //Agora pega trs da tabela para pegar os empréstimos
         Elements trs = borrows_page.getDoc().select("table:last-of-type > tbody > tr:gt(0)");
         if (trs.size() != n_borrows)
-            throw  new UnexpectedPageContent("Número de empréstimos não confere");
+            throw  new UnexpectedPageContent();
 
-        List<IBorrow> borrows = new ArrayList<>(n_borrows);
+        ArrayList<IBorrow> borrows = new ArrayList<>(n_borrows);
         for (Element tr : trs) {
             Elements tds = tr.select("td");
             if (tds.size() < 10)
-                throw new UnexpectedPageContent("Empréstimo inválido");
+                throw new UnexpectedPageContent();
             Book book = new Book(tds.eq(3).text().substring(0, tds.eq(3).text().indexOf('/') == -1 ? tds.eq(3).text().length() :
                     tds.eq(3).text().indexOf('/')), tds.eq(2).text());
             Date due_date = tryParse(tds.eq(5).text());
@@ -107,7 +107,7 @@ public class FmuLibrary extends ILibrary {
             Page borrow_page = new Page(borrow_url);
             Elements borrows_tr = borrow_page.getDoc().select("table:nth-last-of-type(2) > tbody > tr");
             if (borrows_tr.size() < 3)
-                throw new UnexpectedPageContent("Não foi possível carregar informações do empréstimo");
+                throw new UnexpectedPageContent();
             Date borrow_date = tryParse(borrows_tr.eq(0).select("td").eq(1).text());
            // String renew_url = borrows_tr.eq(2).select("td:eq(1) a").attr("href");
             borrows.add(new UspBorrow(book, borrow_date, due_date, ""));
@@ -135,7 +135,7 @@ public class FmuLibrary extends ILibrary {
                 return DATE_FORMAT.parse(date);
             }
             catch (ParseException e2) {
-                throw new UnexpectedPageContent("Erro convertendo data: '" + date + "'");
+                throw new UnexpectedPageContent();
             }
         }
     }

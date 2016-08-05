@@ -1,14 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--  Single List Item Design -->
-
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/label"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:padding="10dip"
-    android:textSize="16dip"
-    android:textStyle="bold"
-    tools:context="com.book.renew.renovae.BorrowItemActivity"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativelayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
     >
-</TextView>
+
+    <ImageView
+        android:id="@+id/book_cover"
+        android:layout_width="50dp"
+        android:layout_height="67dp"
+        android:src="@drawable/book_default_cover" />
+    <LinearLayout
+        android:layout_width="285dp"
+        android:layout_height="57dp"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        >
+        <TextView
+            android:id="@+id/borrow_book_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:textStyle="bold"
+            android:text="Introdução à Economia"
+            android:textColor="#000000" />
+        <TextView
+            android:id="@+id/borrow_book_authors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:text="Autores do livro de economia"
+            android:textColor="#bbbbbb" />
+        <TextView
+            android:id="@+id/borrow_due_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+
+            android:text="Devolver em 20/10/16"
+            android:textColor="#000000" />
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/renew_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="18dp"
+        android:src="@drawable/ic_autorenew_red_900_48dp" />
+
+
+
+</LinearLayout>
