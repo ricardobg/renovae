@@ -4,6 +4,7 @@ import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
+import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.UnknownLoginException;
 import com.book.renew.renovae.util.web.Page;
@@ -78,16 +79,20 @@ public class UspLibrary extends ILibrary {
         if (user_page.size() > 1)
             throw new UnexpectedPageContent();
         //Usuário está logado
+        System.out.println(login_page);
     }
 
     @Override
-    public ArrayList<IBorrow> getBorrowedBooks()  throws IOException, UnexpectedPageContent {
+    public ArrayList<IBorrow> getBorrowedBooks()  throws IOException, UnexpectedPageContent, LogoutException {
         Page borrows_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),
                         new Param("adm_library", "USP50")
                 )
         ));
+        Elements user_button = borrows_page.getDoc().select("table.tablebar > tbody > tr.topbar > td.topbar > a:matches(.*Usu.rio.*)");
+        if (user_button.size() == 0)
+            throw new LogoutException();
         //Primeiro pega número de empréstimos
         Elements m = borrows_page.getDoc().select("table > tbody > tr:only-of-type > td:only-of-type.td1 > a:matches(DEDALUS.*)");
         if (m.size() != 1)
@@ -118,7 +123,7 @@ public class UspLibrary extends ILibrary {
                 throw new UnexpectedPageContent();
             Date borrow_date = UspUtils.tryDateParse(borrows_tr.eq(0).select("td").eq(1).text());
             String renew_url = borrows_tr.eq(2).select("td:eq(1) a").attr("href");*/
-            borrows.add(new UspBorrow(book, due_date, ""));
+            borrows.add(new UspBorrow(book, due_date, borrow_url));
         }
         return borrows;
     }

@@ -26,7 +26,7 @@ public class UspUtils {
     }
 
     public static String getFeedback(String content) {
-        Elements feedback =  Jsoup.parse(content).select("table.tablebar > tbody > tr > td#feedback_bar.feedbackbar");;
+        Elements feedback =  Jsoup.parse(content).select("table.tablebar > tbody > tr > td#feedback_bar.feedbackbar");
         if (!feedback.isEmpty() && !feedback.text().replaceAll("\\s|\\u00a0", "").isEmpty())
             return feedback.text();
         return null;

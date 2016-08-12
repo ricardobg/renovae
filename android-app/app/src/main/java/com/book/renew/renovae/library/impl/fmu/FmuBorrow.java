@@ -2,6 +2,7 @@ package com.book.renew.renovae.library.impl.fmu;
 
 import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.IBorrow;
+import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 
@@ -19,7 +20,7 @@ public class FmuBorrow extends IBorrow {
         _renew_link = renew_link;
     }
     @Override
-    public void renew() throws IOException, UnexpectedPageContent, RenewException {
+    public void renew() throws IOException, UnexpectedPageContent, RenewException, LogoutException {
         //TODO: renovar
     }
 }

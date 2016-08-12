@@ -4,6 +4,7 @@ import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
+import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.impl.usp.UspBorrow;
 import com.book.renew.renovae.util.web.Page;
@@ -71,7 +72,7 @@ public class FmuLibrary extends ILibrary {
     }
 
     @Override
-    public ArrayList<IBorrow> getBorrowedBooks() throws IOException, UnexpectedPageContent {
+    public ArrayList<IBorrow> getBorrowedBooks() throws IOException, UnexpectedPageContent, LogoutException {
         Page borrows_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),

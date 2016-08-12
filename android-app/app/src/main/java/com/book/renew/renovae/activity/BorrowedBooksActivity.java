@@ -2,6 +2,7 @@ package com.book.renew.renovae.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -11,13 +12,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.book.renew.renovae.R;
 import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.ILibrary;
+import com.book.renew.renovae.library.exception.LoginException;
+import com.book.renew.renovae.library.exception.LogoutException;
+import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+import com.book.renew.renovae.library.exception.renew.CantExtendRenewException;
 import com.book.renew.renovae.util.Util;
 
 import java.io.IOException;
@@ -146,26 +153,42 @@ public class BorrowedBooksActivity extends AppCompatActivity {
 
     private class BorrowsViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
-        public TextView _titleText;
-        public TextView _authorText;
-        public TextView _dueDateText;
+        private TextView _titleText;
+        private TextView _authorText;
+        private TextView _dueDateText;
+        private ImageView _renew_button;
+        private IBorrow _borrow;
 
         public BorrowsViewHolder(View itemView) {
             super(itemView);
             _titleText = (TextView) itemView.findViewById(R.id.borrow_book_title);
             _authorText = (TextView) itemView.findViewById(R.id.borrow_book_authors);
             _dueDateText = (TextView) itemView.findViewById(R.id.borrow_due_date);
+            _renew_button = (ImageView) itemView.findViewById(R.id.renew_button);
+
+            _renew_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (_borrow != null)
+                        new RenewTask().execute(_borrow);
+                }
+            });
         }
 
-        public void setTitle(String title) {
-            _titleText.setText(title);
+        public void setBorrow(IBorrow borrow) {
+            this._borrow = borrow;
+            setTitle(borrow.getBook().getTitle());
+            setAuthors(borrow.getBook().getAuthors());
+            setDueDate(borrow.getDueDate());
+
         }
 
-        public void setAuthors(String authors) {
+        private void setTitle(String title) {_titleText.setText(title);
+        }
+        private void setAuthors(String authors) {
             _authorText.setText(authors);
         }
-
-        public void setDueDate(Date dueDate) {
+        private void setDueDate(Date dueDate) {
             _dueDateText.setText(Util.FULL_YEAR_DATE_FORMAT.format(dueDate));
         }
 
@@ -189,10 +212,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(BorrowsViewHolder holder, int position) {
             IBorrow borrow = _borrows.get(position);
-
-            holder.setTitle(borrow.getBook().getTitle());
-            holder.setAuthors(borrow.getBook().getAuthors());
-            holder.setDueDate(borrow.getDueDate());
+            holder.setBorrow(borrow);
         }
 
         @Override
@@ -204,19 +224,21 @@ public class BorrowedBooksActivity extends AppCompatActivity {
     /**
      * Task to load borrows
      */
-    private class BorrowsTask extends AsyncTask<Void, Void, ArrayList<IBorrow>> {
+    private class BorrowsTask extends AsyncTask<Void, Void, Exception> {
+        private ArrayList<IBorrow> _borrows = null;
         @Override
         protected void onPreExecute() {
         }
 
         @Override
-        protected ArrayList<IBorrow> doInBackground(Void... params) {
+        protected Exception doInBackground(Void... params) {
             try {
-                return _lib.getBorrowedBooks();
-            } catch (IOException e) {
+                _borrows = _lib.getBorrowedBooks();
                 return null;
-            } catch (UnexpectedPageContent unexpectedPageContent) {
-                return null;
+            } catch (LogoutException e) {
+                return e;
+            } catch (Exception e) {
+                return e;
             }
         }
 
@@ -225,15 +247,79 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<IBorrow> result) {
+        protected void onPostExecute(Exception error) {
             _borrowsSwipeRefresh.setRefreshing(false);
             //Compare and add new
-            int len = 0;
-            if (result != null)
-                len = result.size();
-            displayMessage("Você tem " + len + " empréstimo(s)");
-            updateBorrowsRecycler(result);
 
+            if (_borrows != null) {
+                int len = 0;
+                len = _borrows.size();
+                displayMessage("Você tem " + len + " empréstimo(s)");
+            }
+            else {
+                if (error instanceof LogoutException)
+                    displayMessage("Deu logout!");
+                else if (error instanceof UnexpectedPageContent)
+                    displayMessage("Erro na página");
+                else if (error instanceof  IOException)
+                    displayMessage("Erro de conexão");
+            }
+            updateBorrowsRecycler(_borrows);
+
+
+        }
+    }
+
+
+
+    private class RenewTask extends AsyncTask<IBorrow, Void, Exception> {
+        private IBorrow _borrow = null;
+        @Override
+        protected void onPreExecute() {
+        }
+
+        @Override
+        protected Exception doInBackground(IBorrow... params) {
+            try {
+                _borrow = params[0];
+                _borrow.renew();
+                return null;
+            } catch (LogoutException e) {
+                return e;
+            } catch (Exception e) {
+                return e;
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+        }
+
+        @Override
+        protected void onPostExecute(Exception error) {
+            if (error == null) {
+                //Atualiza empréstimos
+                //TODO: melhorar
+                displayMessage("Livro renovado!");
+                _borrowsSwipeRefresh.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        _borrowsSwipeRefresh.setRefreshing(true);
+                    }
+                });
+                (new BorrowsTask()).execute();
+            }
+            else {
+                error.printStackTrace();
+                if (error instanceof LogoutException)
+                    displayMessage("Deu logout!");
+                else if (error instanceof UnexpectedPageContent)
+                    displayMessage("Erro na página");
+                else if (error instanceof  IOException)
+                    displayMessage("Erro de conexão");
+                else if (error instanceof RenewException)
+                    displayMessage("Erro: " + error.getMessage());
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.book.renew.renovae.library;
 
+import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.util.Util;
@@ -23,7 +24,7 @@ public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
         _due_date = due_date;
     }
 
-    public abstract void renew() throws IOException, UnexpectedPageContent, RenewException;
+    public abstract void renew() throws IOException, UnexpectedPageContent, RenewException, LogoutException;
 
     public Book getBook() {
         return _book;
