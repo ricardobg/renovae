@@ -80,14 +80,19 @@ public class LoginActivity extends AppCompatActivity {
         //Populate universities spinner
         populateUniversitiesSpinner();
 
-        //Tries to login if needed
-        LoginParameters login = (LoginParameters) getIntent().getSerializableExtra(Util.EXTRA_LOGIN_PARAMETERS);
+        //Shows login message
+        String error_message = (String) getIntent().getSerializableExtra(Util.EXTRA_ERROR_MESSAGE);
+        if (error_message != null)
+            displayMessage(error_message);
+
+        LoginParameters login = _preferences.getLogin();
         if (login != null) {
             //Fill field
             _usernameEdit.setText(login.username);
             _passwordEdit.setText(login.password);
             selectSpinnerItemByValue(_universitiesSpinner, login.university);
-            (new LoginTask()).execute(new LoginParameters(login.username, login.password, login.university, false));
+            _rememberMeCheckbox.setChecked(true);
+            //(new LoginTask()).execute(new LoginParameters(login.username, login.password, login.university, false));
         }
         else {
             //Set the focus
@@ -99,14 +104,14 @@ public class LoginActivity extends AppCompatActivity {
     /** INTENT CREATE METHODS **/
 
     /**
-     * Intent for login activity automatically login
+     * Intent for login error
      * @param packageContext Current activity
-     * @param login parameters to login (or null if do not want to login)
+     * @param error parameters to login (or null if do not want to login)
      * @return the Intent
      */
-    public static Intent newIntent(Context packageContext, LoginParameters login) {
+    public static Intent newIntent(Context packageContext, String error) {
         Intent intent = new Intent(packageContext, LoginActivity.class);
-        intent.putExtra(Util.EXTRA_LOGIN_PARAMETERS, login);
+        intent.putExtra(Util.EXTRA_ERROR_MESSAGE, error);
         return intent;
     }
 

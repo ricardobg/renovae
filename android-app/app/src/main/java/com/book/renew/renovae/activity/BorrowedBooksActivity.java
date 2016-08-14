@@ -25,6 +25,9 @@ import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.renew.CantExtendRenewException;
+import com.book.renew.renovae.library.impl.Universities;
+import com.book.renew.renovae.util.LoginParameters;
+import com.book.renew.renovae.util.UserPreferences;
 import com.book.renew.renovae.util.Util;
 
 import java.io.IOException;
@@ -46,6 +49,8 @@ public class BorrowedBooksActivity extends AppCompatActivity {
     private static final String KEY_LIBRARY = "library";
     private static final String KEY_BORROWS = "borrows";
 
+    private UserPreferences _user_prefs;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +70,8 @@ public class BorrowedBooksActivity extends AppCompatActivity {
             }
         });
 
+        _user_prefs = new UserPreferences(BorrowedBooksActivity.this);
+
         //Check for saved instance
         if (savedInstanceState != null) {
             _lib = (ILibrary) savedInstanceState.getSerializable(KEY_LIBRARY);
@@ -75,8 +82,12 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
 
         //If didn't find lib, get from intent
-        if (_lib == null)
+        if (_lib == null) {
             _lib = (ILibrary) getIntent().getSerializableExtra(Util.EXTRA_LIBRARY);
+            //Not logged in
+            if (_lib == null) {
+            }
+        }
         if (_borrows == null) {
             _borrowsSwipeRefresh.post(new Runnable() {
                 @Override
@@ -109,7 +120,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
     /** INTENT CREATE METHODS **/
 
     /**
-     * Create new intent to this activity
+     * Create new intent to this activity, used after login
      * @param packageContext previous activity
      * @param library the library to send to this page
      * @return
@@ -224,20 +235,33 @@ public class BorrowedBooksActivity extends AppCompatActivity {
     /**
      * Task to load borrows
      */
-    private class BorrowsTask extends AsyncTask<Void, Void, Exception> {
+    private class BorrowsTask extends AsyncTask<LoginParameters, Void, Exception> {
         private ArrayList<IBorrow> _borrows = null;
         @Override
         protected void onPreExecute() {
         }
 
+        private void doLogin() throws UnexpectedPageContent, LoginException, IOException {
+            if (_lib == null) {
+                LoginParameters login = _user_prefs.getLogin();
+                _lib = Universities.instance().getUniversity(login.university);
+                _lib.login(login.username, login.password);
+            }
+        }
+
         @Override
-        protected Exception doInBackground(Void... params) {
+        protected Exception doInBackground(LoginParameters... params) {
             try {
+                doLogin();
                 _borrows = _lib.getBorrowedBooks();
                 return null;
             } catch (LogoutException e) {
                 return e;
-            } catch (Exception e) {
+            } catch (IOException e) {
+                return e;
+            } catch (LoginException e) {
+                return e;
+            } catch (UnexpectedPageContent e) {
                 return e;
             }
         }
@@ -255,6 +279,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
                 int len = 0;
                 len = _borrows.size();
                 displayMessage("Você tem " + len + " empréstimo(s)");
+                updateBorrowsRecycler(_borrows);
             }
             else {
                 if (error instanceof LogoutException)
@@ -263,8 +288,17 @@ public class BorrowedBooksActivity extends AppCompatActivity {
                     displayMessage("Erro na página");
                 else if (error instanceof  IOException)
                     displayMessage("Erro de conexão");
+                else {
+                    if (error instanceof LoginException) {
+                        //Volta para tela de login
+                        startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, error.getMessage()));
+                        finish();
+                    }
+                    else
+                        updateBorrowsRecycler(_borrows);
+                }
             }
-            updateBorrowsRecycler(_borrows);
+
 
 
         }
