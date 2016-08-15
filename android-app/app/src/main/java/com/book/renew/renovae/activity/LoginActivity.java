@@ -12,15 +12,16 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.book.renew.renovae.R;
-import com.book.renew.renovae.library.ILibrary;
+import com.book.renew.renovae.library.LibraryManager;
+import com.book.renew.renovae.library.exception.InvalidUniversityException;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.UnknownLoginException;
-import com.book.renew.renovae.library.impl.Universities;
-import com.book.renew.renovae.util.LoginParameters;
+import com.book.renew.renovae.library.LoginParameters;
 import com.book.renew.renovae.util.UserPreferences;
 import com.book.renew.renovae.util.Util;
 
@@ -35,6 +36,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText _passwordEdit;
     private Spinner _universitiesSpinner;
     private CheckBox _rememberMeCheckbox;
+    private TextView _errorTextView;
+
 
     private UserPreferences _preferences;
 
@@ -48,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         _passwordEdit = (EditText) findViewById(R.id.edit_password);
         _universitiesSpinner = (Spinner) findViewById(R.id.spinner_universities);
         _rememberMeCheckbox = (CheckBox) findViewById(R.id.checkbox_remember_me);
+        _errorTextView = (TextView) findViewById(R.id.text_login_error);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,18 +61,18 @@ public class LoginActivity extends AppCompatActivity {
                 String password = _passwordEdit.getText().toString();
                 boolean save = _rememberMeCheckbox.isChecked();
 
-                if (!Universities.instance().hasUniversity(university)) {
-                    displayMessage(getString(R.string.university_missing));
+                if (!LibraryManager.universityExists(university)) {
+                    displayErrorMessage(getString(R.string.university_missing));
                     _universitiesSpinner.requestFocus();
                     return;
                 }
                 if (username.equals("")) {
-                    displayMessage(getString(R.string.username_missing));
+                    displayErrorMessage(getString(R.string.username_missing));
                     _usernameEdit.requestFocus();
                     return;
                 }
                 if (password.equals("")) {
-                    displayMessage(getString(R.string.password_missing));
+                    displayErrorMessage(getString(R.string.password_missing));
                     _passwordEdit.requestFocus();
                 }
                 (new LoginTask()).execute(new LoginParameters(username, password, university, save));
@@ -80,10 +84,10 @@ public class LoginActivity extends AppCompatActivity {
         //Populate universities spinner
         populateUniversitiesSpinner();
 
-        //Shows login message
+        //Shows error message
         String error_message = (String) getIntent().getSerializableExtra(Util.EXTRA_ERROR_MESSAGE);
         if (error_message != null)
-            displayMessage(error_message);
+            displayErrorMessage(error_message);
 
         LoginParameters login = _preferences.getLogin();
         if (login != null) {
@@ -115,15 +119,25 @@ public class LoginActivity extends AppCompatActivity {
         return intent;
     }
 
+    /**
+     * Intent for login page
+     * @param packageContext
+     * @return
+     */
+    public static Intent newIntent(Context packageContext) {
+        Intent intent = new Intent(packageContext, LoginActivity.class);
+        return intent;
+    }
+
     /** UTIL METHODS FOR UNIVERSITIES SPINNER */
 
     /**
      * Populate universities spinner with Universties class map
      */
     private void populateUniversitiesSpinner() {
-        Set<String> set_universities = Universities.instance().getUniversities();
+        Set<String> set_universities = LibraryManager.getUniversities();
         List<String> universities = new ArrayList<>(set_universities.size() + 1);
-        universities.add("Escolha sua Universidade");
+        universities.add(getString(R.string.university_choice));
         for (String s : set_universities)
             universities.add(s);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -150,14 +164,9 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    /** UTIL METHODS FOR DISPLAYING MESSAGE */
 
-    private void displayMessage(String message) {
-        displayMessage(message, false);
-    }
-
-    private void displayMessage(String message, boolean long_duration) {
-        Toast.makeText(this, message, long_duration ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
+    private void displayErrorMessage(String message) {
+        _errorTextView.setText(message);
     }
 
     /**
@@ -166,30 +175,30 @@ public class LoginActivity extends AppCompatActivity {
     private class LoginTask extends AsyncTask<LoginParameters, Void, String> {
 
         private ProgressDialog _progress;
-        private ILibrary _lib;
-        private LoginParameters _param;
+        private LibraryManager _lib;
         @Override
         protected void onPreExecute() {
-            _progress = ProgressDialog.show(LoginActivity.this, "", "Fazendo login...");
+            _progress = ProgressDialog.show(LoginActivity.this, "", getString(R.string.login_in_progress));
         }
 
         @Override
         protected String doInBackground(LoginParameters... params) {
             try {
-                _param = params[0];
-                _lib = Universities.instance().getUniversity(_param.university);
-                _lib.login(_param.username, _param.password);
+                _lib = new LibraryManager(params[0], true);
                return null;
             } catch (IOException e) {
-                return getResources().getString(R.string.io_error);
+                e.printStackTrace();
+                System.out.println(e.getMessage());
+                return getString(R.string.io_error);
             } catch (UnexpectedPageContent e) {
-                return getResources().getString(R.string.unexpected_content_error);
+                return getString(R.string.unexpected_content_error);
             } catch (UnknownLoginException e) {
-                return getResources().getString(R.string.login_error);
+                return getString(R.string.login_error);
             } catch (LoginException e) {
                 return e.getMessage();
+            } catch (InvalidUniversityException e) {
+                return getString(R.string.invalid_university);
             }
-
         }
 
         @Override
@@ -200,10 +209,10 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             _progress.dismiss();
             if (result != null)
-                displayMessage(result, true);
+                displayErrorMessage(result);
             else {
-                if (_param.save)
-                    _preferences.updateLogin(_param);
+                if (_lib.getLoginParams().save)
+                    _preferences.updateLogin(_lib.getLoginParams());
                 startActivity(BorrowedBooksActivity.newIntent(LoginActivity.this, _lib));
                 finish();
             }

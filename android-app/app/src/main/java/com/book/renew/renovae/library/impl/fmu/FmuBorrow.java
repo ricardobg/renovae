@@ -1,12 +1,11 @@
 package com.book.renew.renovae.library.impl.fmu;
 
-import com.book.renew.renovae.library.Book;
-import com.book.renew.renovae.library.IBorrow;
+import com.book.renew.renovae.library.impl.Book;
+import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.renew.UnknownRenewException;
-import com.book.renew.renovae.library.impl.usp.UspUtils;
 import com.book.renew.renovae.util.web.Page;
 
 import org.jsoup.select.Elements;

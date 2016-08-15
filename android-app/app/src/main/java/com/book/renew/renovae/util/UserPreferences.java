@@ -3,6 +3,8 @@ package com.book.renew.renovae.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.book.renew.renovae.library.LoginParameters;
+
 
 /**
  * Created by ricardo on 04/08/16.

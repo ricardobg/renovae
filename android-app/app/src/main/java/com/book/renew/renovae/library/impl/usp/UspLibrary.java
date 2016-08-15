@@ -1,8 +1,8 @@
 package com.book.renew.renovae.library.impl.usp;
 
-import com.book.renew.renovae.library.Book;
-import com.book.renew.renovae.library.IBorrow;
-import com.book.renew.renovae.library.ILibrary;
+import com.book.renew.renovae.library.impl.Book;
+import com.book.renew.renovae.library.impl.IBorrow;
+import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,6 +130,7 @@ public class UspLibrary extends ILibrary {
     @Override
     public void logout()  throws IOError, UnexpectedPageContent {
         //TODO: fazer logout
+
     }
 
 

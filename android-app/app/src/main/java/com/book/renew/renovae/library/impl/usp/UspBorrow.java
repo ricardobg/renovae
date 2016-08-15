@@ -1,7 +1,7 @@
 package com.book.renew.renovae.library.impl.usp;
 
-import com.book.renew.renovae.library.Book;
-import com.book.renew.renovae.library.IBorrow;
+import com.book.renew.renovae.library.impl.Book;
+import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
@@ -22,6 +22,7 @@ public class UspBorrow extends IBorrow {
         super(book, due_date);
         _borrow_link = borrow_link;
     }
+    protected static void test() {}
 
     public void renew() throws IOException, UnexpectedPageContent, RenewException, LogoutException {
         Page borrow_page = new Page(_borrow_link);

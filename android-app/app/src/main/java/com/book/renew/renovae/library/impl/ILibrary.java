@@ -1,4 +1,4 @@
-package com.book.renew.renovae.library;
+package com.book.renew.renovae.library.impl;
 
 
 import com.book.renew.renovae.library.exception.LoginException;
@@ -8,17 +8,20 @@ import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Interface para ser implementada para cada universidade
  *
  */
 public abstract class ILibrary implements Serializable {
+
     /**
-     * login in the system. Throws an error if it was not possible
+     * function that does the login
      * @param user
      * @param password
+     * @throws IOException
+     * @throws UnexpectedPageContent
+     * @throws LoginException
      */
     public abstract void login(String user, String password) throws IOException, UnexpectedPageContent, LoginException;
 

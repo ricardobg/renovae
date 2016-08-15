@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remember_me">Lembre-se de mim</string>
+    <string name="login_button_text">Entrar</string>
+    <string name="password_hint">Senha</string>
+    <string name="username_hint">Usuário</string>
+    <string name="university_choice">Escolha sua Universidade</string>
+
+
+
+</resources>

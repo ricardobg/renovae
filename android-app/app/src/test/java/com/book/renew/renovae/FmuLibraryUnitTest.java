@@ -1,12 +1,9 @@
 package com.book.renew.renovae;
 
-import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.impl.fmu.FmuLibrary;
 
 
 import org.junit.Test;
-
-import java.util.List;
 
 /**
  * Created by ricardo on 29/07/16.

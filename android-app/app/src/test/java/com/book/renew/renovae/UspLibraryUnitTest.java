@@ -1,11 +1,8 @@
 package com.book.renew.renovae;
 
-import com.book.renew.renovae.library.IBorrow;
 import com.book.renew.renovae.library.impl.usp.UspLibrary;
 
 import org.junit.Test;
-
-import java.util.List;
 
 /**
  * To work on unit tests, switch the Test Artifact in the Build Variants view.

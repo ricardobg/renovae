@@ -2,7 +2,6 @@ package com.book.renew.renovae.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -12,21 +11,22 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.book.renew.renovae.R;
-import com.book.renew.renovae.library.IBorrow;
-import com.book.renew.renovae.library.ILibrary;
+import com.book.renew.renovae.library.LibraryManager;
+import com.book.renew.renovae.library.exception.InvalidUniversityException;
+import com.book.renew.renovae.library.exception.UnknownLoginException;
+import com.book.renew.renovae.library.exception.renew.UnknownRenewException;
+import com.book.renew.renovae.library.impl.IBorrow;
+import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContent;
-import com.book.renew.renovae.library.exception.renew.CantExtendRenewException;
-import com.book.renew.renovae.library.impl.Universities;
-import com.book.renew.renovae.util.LoginParameters;
+import com.book.renew.renovae.library.LoginParameters;
 import com.book.renew.renovae.util.UserPreferences;
 import com.book.renew.renovae.util.Util;
 
@@ -34,22 +34,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 public class BorrowedBooksActivity extends AppCompatActivity {
 
-    private ILibrary _lib = null;
-    private ArrayList<IBorrow> _borrows = null;
+    private LibraryManager _lib = null;
 
     private RecyclerView _borrowsRecyclerView;
     private SwipeRefreshLayout _borrowsSwipeRefresh;
 
     private BorrowsAdapter _borrowsAdapter;
+    private ArrayList<IBorrow> _borrows = null;
 
     private static final String KEY_LIBRARY = "library";
     private static final String KEY_BORROWS = "borrows";
 
-    private UserPreferences _user_prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,52 +56,45 @@ public class BorrowedBooksActivity extends AppCompatActivity {
 
         _borrowsRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_borrows);
         _borrowsSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_borrows);
-
-
         _borrowsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
         _borrowsSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                System.out.println("Called on refresh");
                 (new BorrowsTask()).execute();
             }
         });
 
-        _user_prefs = new UserPreferences(BorrowedBooksActivity.this);
-
         //Check for saved instance
         if (savedInstanceState != null) {
-            _lib = (ILibrary) savedInstanceState.getSerializable(KEY_LIBRARY);
-            IBorrow[] tempBorrows = (IBorrow[]) savedInstanceState.getSerializable(KEY_BORROWS);
-            if (tempBorrows != null) {
-                _borrows = new ArrayList<>(Arrays.asList(tempBorrows));
-            }
+            _lib = (LibraryManager) savedInstanceState.getSerializable(KEY_LIBRARY);
         }
 
         //If didn't find lib, get from intent
         if (_lib == null) {
-            _lib = (ILibrary) getIntent().getSerializableExtra(Util.EXTRA_LIBRARY);
-            //Not logged in
-            if (_lib == null) {
-            }
+            _lib = (LibraryManager) getIntent().getSerializableExtra(Util.EXTRA_LIBRARY);
         }
-        if (_borrows == null) {
+
+        if (_lib == null) {
+            _lib = new LibraryManager(
+                    (LoginParameters) getIntent().getSerializableExtra(Util.EXTRA_LOGIN_PARAMETERS));
+        }
+        _borrows = _lib.getCachedBorrows();
+        boolean borrows_null = _borrows == null;
+        if (borrows_null)
+            _borrows = new ArrayList<>();
+
+        _borrowsAdapter = new BorrowsAdapter(_borrows);
+        _borrowsRecyclerView.setAdapter(_borrowsAdapter);
+
+        if (borrows_null) {
             _borrowsSwipeRefresh.post(new Runnable() {
                 @Override
                 public void run() {
-                    _borrowsSwipeRefresh.setRefreshing(true);
+                _borrowsSwipeRefresh.setRefreshing(true);
+                (new BorrowsTask()).execute();
                 }
             });
-            (new BorrowsTask()).execute();
         }
-        else {
-            _borrowsAdapter = new BorrowsAdapter(_borrows);
-            _borrowsRecyclerView.setAdapter(_borrowsAdapter);
-        }
-
-
-
     }
 
     @Override
@@ -111,10 +102,6 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         //Save stuff
         savedInstanceState.putSerializable(KEY_LIBRARY, _lib);
-        if (_borrows != null)
-            savedInstanceState.putSerializable(KEY_BORROWS, _borrows.toArray(new IBorrow[_borrows.size()]));
-        else
-            savedInstanceState.putSerializable(KEY_BORROWS, null);
     }
 
     /** INTENT CREATE METHODS **/
@@ -125,12 +112,18 @@ public class BorrowedBooksActivity extends AppCompatActivity {
      * @param library the library to send to this page
      * @return
      */
-    public static Intent newIntent(Context packageContext, ILibrary library) {
+    public static Intent newIntent(Context packageContext, LibraryManager library) {
         Intent intent = new Intent(packageContext, BorrowedBooksActivity.class);
         intent.putExtra(Util.EXTRA_LIBRARY, library);
         return intent;
     }
 
+
+    public static Intent newIntent(Context packageContext, LoginParameters login) {
+        Intent intent = new Intent(packageContext, BorrowedBooksActivity.class);
+        intent.putExtra(Util.EXTRA_LOGIN_PARAMETERS, login);
+        return intent;
+    }
     private void displayMessage(String message) {
         displayMessage(message, false);
     }
@@ -148,17 +141,10 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
         else {
             //TODO: improve this code
-            if (_borrows == null) {
-                _borrows = newBorrows;
-                _borrowsAdapter = new BorrowsAdapter(_borrows);
-                _borrowsRecyclerView.setAdapter(_borrowsAdapter);
-            }
-            else {
-                _borrows.clear();
-                for (int i = 0; i < newBorrows.size(); i++)
-                    _borrows.add(newBorrows.get(i));
-                _borrowsAdapter.notifyDataSetChanged();
-            }
+            _borrows.clear();
+            for (int i = 0; i < newBorrows.size(); i++)
+                _borrows.add(newBorrows.get(i));
+            _borrowsAdapter.notifyDataSetChanged();
         }
     }
 
@@ -241,27 +227,12 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         protected void onPreExecute() {
         }
 
-        private void doLogin() throws UnexpectedPageContent, LoginException, IOException {
-            if (_lib == null) {
-                LoginParameters login = _user_prefs.getLogin();
-                _lib = Universities.instance().getUniversity(login.university);
-                _lib.login(login.username, login.password);
-            }
-        }
-
         @Override
         protected Exception doInBackground(LoginParameters... params) {
             try {
-                doLogin();
                 _borrows = _lib.getBorrowedBooks();
                 return null;
-            } catch (LogoutException e) {
-                return e;
-            } catch (IOException e) {
-                return e;
-            } catch (LoginException e) {
-                return e;
-            } catch (UnexpectedPageContent e) {
+            } catch (Exception e) {
                 return e;
             }
         }
@@ -273,30 +244,33 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Exception error) {
             _borrowsSwipeRefresh.setRefreshing(false);
+            updateBorrowsRecycler(_borrows);
             //Compare and add new
 
             if (_borrows != null) {
                 int len = 0;
                 len = _borrows.size();
-                displayMessage("Você tem " + len + " empréstimo(s)");
-                updateBorrowsRecycler(_borrows);
             }
             else {
-                if (error instanceof LogoutException)
-                    displayMessage("Deu logout!");
-                else if (error instanceof UnexpectedPageContent)
+
+                System.out.println(error.getMessage());
+
+                if (error instanceof UnexpectedPageContent)
                     displayMessage("Erro na página");
                 else if (error instanceof  IOException)
                     displayMessage("Erro de conexão");
+                else if (error instanceof UnknownRenewException)
+                    displayMessage("Não foi possível renovar");
+                else if (error instanceof RenewException)
+                    displayMessage(error.getMessage());
                 else {
-                    if (error instanceof LoginException) {
-                        //Volta para tela de login
-                        startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, error.getMessage()));
-                        finish();
-                    }
-                    else
-                        updateBorrowsRecycler(_borrows);
+                    String msg = "Deu logout";
+                    if (error.getMessage() != null && !error.getMessage().equals(("")))
+                        msg = error.getMessage();
+                    startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, msg));
+                    finish();
                 }
+
             }
 
 
@@ -315,11 +289,8 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         @Override
         protected Exception doInBackground(IBorrow... params) {
             try {
-                _borrow = params[0];
-                _borrow.renew();
+                _lib.renew(params[0]);
                 return null;
-            } catch (LogoutException e) {
-                return e;
             } catch (Exception e) {
                 return e;
             }
@@ -345,14 +316,21 @@ public class BorrowedBooksActivity extends AppCompatActivity {
             }
             else {
                 error.printStackTrace();
-                if (error instanceof LogoutException)
-                    displayMessage("Deu logout!");
-                else if (error instanceof UnexpectedPageContent)
+                if (error instanceof UnexpectedPageContent)
                     displayMessage("Erro na página");
                 else if (error instanceof  IOException)
                     displayMessage("Erro de conexão");
+                else if (error instanceof UnknownRenewException)
+                    displayMessage("Não foi possível renovar");
                 else if (error instanceof RenewException)
-                    displayMessage("Erro: " + error.getMessage());
+                    displayMessage(error.getMessage());
+                else {
+                    String msg = "Deu logout";
+                    if (error.getMessage() != null && !error.getMessage().equals(("")))
+                        msg = error.getMessage();
+                    startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, msg));
+                    finish();
+                }
             }
         }
     }
