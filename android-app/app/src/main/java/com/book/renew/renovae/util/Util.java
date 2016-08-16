@@ -1,5 +1,10 @@
 package com.book.renew.renovae.util;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
+
 import java.text.SimpleDateFormat;
 
 /**
@@ -15,6 +20,11 @@ public class Util {
 
     public static final SimpleDateFormat FULL_YEAR_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 
-
+    public static boolean hasInternetConnection(Context context) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 
 }

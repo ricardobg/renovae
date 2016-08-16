@@ -43,4 +43,12 @@ public class UserPreferences {
         editor.apply();
     }
 
+    public void eraseLogin() {
+        SharedPreferences.Editor editor = _context.getSharedPreferences(PREFS_USER, Context.MODE_PRIVATE).edit();
+        editor.remove(PREFS_USER_NAME)
+                .remove(PREFS_USER_PASSWORD)
+                .remove(PREFS_USER_UNIVERSITY)
+                .apply();
+    }
+
 }

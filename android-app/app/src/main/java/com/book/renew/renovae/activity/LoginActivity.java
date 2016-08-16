@@ -216,9 +216,22 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(BorrowedBooksActivity.newIntent(LoginActivity.this, _lib));
                 finish();
             }
-
-
         }
+    }
+    public void handleException(Exception error) {
+        if (error instanceof UnexpectedPageContent)
+            displayErrorMessage("Erro na página");
+        else if (error instanceof IOException) {
+            if (!Util.hasInternetConnection(LoginActivity.this))
+                displayErrorMessage("Sem conexão com a internet");
+            else
+                displayErrorMessage("Site da biblioteca indisponível");
+        }
+        else if (error instanceof UnknownLoginException)
+            displayErrorMessage("Erro na página");
+        else if (error instanceof LoginException)
+            displayErrorMessage(error.getMessage());
+
     }
 
 }

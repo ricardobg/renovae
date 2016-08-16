@@ -3,6 +3,7 @@ package com.book.renew.renovae.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,7 +12,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +45,8 @@ public class BorrowedBooksActivity extends AppCompatActivity {
 
     private RecyclerView _borrowsRecyclerView;
     private SwipeRefreshLayout _borrowsSwipeRefresh;
+    private DrawerLayout _drawerLayout;
+    private ListView _left_drawer;
 
     private BorrowsAdapter _borrowsAdapter;
     private ArrayList<IBorrow> _borrows = null;
@@ -53,6 +59,26 @@ public class BorrowedBooksActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_borrowed_books);
+
+        _drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        _left_drawer = (ListView) findViewById(R.id.left_drawer);
+
+        ArrayList<String> ts = new ArrayList<>();
+        ts.add("Sair");
+        _left_drawer.setAdapter(new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, ts));
+        // Set the list's click listener
+        _left_drawer.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    //Sair
+                    new UserPreferences(BorrowedBooksActivity.this).eraseLogin();
+                    startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this));
+                    finish();
+                }
+            }
+        });
 
         _borrowsRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_borrows);
         _borrowsSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_borrows);
@@ -67,11 +93,13 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         //Check for saved instance
         if (savedInstanceState != null) {
             _lib = (LibraryManager) savedInstanceState.getSerializable(KEY_LIBRARY);
+            System.out.println("Loading");
         }
 
         //If didn't find lib, get from intent
         if (_lib == null) {
             _lib = (LibraryManager) getIntent().getSerializableExtra(Util.EXTRA_LIBRARY);
+
         }
 
         if (_lib == null) {
@@ -80,6 +108,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         }
         _borrows = _lib.getCachedBorrows();
         boolean borrows_null = _borrows == null;
+        System.out.println(borrows_null);
         if (borrows_null)
             _borrows = new ArrayList<>();
 
@@ -102,6 +131,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         //Save stuff
         savedInstanceState.putSerializable(KEY_LIBRARY, _lib);
+        System.out.println("Saving");
     }
 
     /** INTENT CREATE METHODS **/
@@ -140,6 +170,8 @@ public class BorrowedBooksActivity extends AppCompatActivity {
             }
         }
         else {
+            if (_borrows == newBorrows)
+                return;
             //TODO: improve this code
             _borrows.clear();
             for (int i = 0; i < newBorrows.size(); i++)
@@ -230,7 +262,7 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         @Override
         protected Exception doInBackground(LoginParameters... params) {
             try {
-                _borrows = _lib.getBorrowedBooks();
+                _borrows = _lib.getBorrowedBooks(true);
                 return null;
             } catch (Exception e) {
                 return e;
@@ -244,37 +276,14 @@ public class BorrowedBooksActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Exception error) {
             _borrowsSwipeRefresh.setRefreshing(false);
-            updateBorrowsRecycler(_borrows);
-            //Compare and add new
 
+            //Compare and add new
             if (_borrows != null) {
-                int len = 0;
-                len = _borrows.size();
+                updateBorrowsRecycler(_borrows);
             }
             else {
-
-                System.out.println(error.getMessage());
-
-                if (error instanceof UnexpectedPageContent)
-                    displayMessage("Erro na página");
-                else if (error instanceof  IOException)
-                    displayMessage("Erro de conexão");
-                else if (error instanceof UnknownRenewException)
-                    displayMessage("Não foi possível renovar");
-                else if (error instanceof RenewException)
-                    displayMessage(error.getMessage());
-                else {
-                    String msg = "Deu logout";
-                    if (error.getMessage() != null && !error.getMessage().equals(("")))
-                        msg = error.getMessage();
-                    startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, msg));
-                    finish();
-                }
-
+                handleException(error);
             }
-
-
-
         }
     }
 
@@ -314,24 +323,29 @@ public class BorrowedBooksActivity extends AppCompatActivity {
                 });
                 (new BorrowsTask()).execute();
             }
-            else {
-                error.printStackTrace();
-                if (error instanceof UnexpectedPageContent)
-                    displayMessage("Erro na página");
-                else if (error instanceof  IOException)
-                    displayMessage("Erro de conexão");
-                else if (error instanceof UnknownRenewException)
-                    displayMessage("Não foi possível renovar");
-                else if (error instanceof RenewException)
-                    displayMessage(error.getMessage());
-                else {
-                    String msg = "Deu logout";
-                    if (error.getMessage() != null && !error.getMessage().equals(("")))
-                        msg = error.getMessage();
-                    startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, msg));
-                    finish();
-                }
-            }
+            else
+                handleException(error);
+        }
+    }
+    public void handleException(Exception error) {
+        if (error instanceof UnexpectedPageContent)
+            displayMessage("Erro na página");
+        else if (error instanceof IOException) {
+            if (!Util.hasInternetConnection(BorrowedBooksActivity.this))
+                displayMessage("Sem conexão com a internet");
+            else
+                displayMessage("Site da biblioteca indisponível");
+        }
+        else if (error instanceof UnknownRenewException)
+            displayMessage("Não foi possível renovar");
+        else if (error instanceof RenewException)
+            displayMessage(error.getMessage());
+        else {
+            String msg = "Deu logout";
+            if (error.getMessage() != null && !error.getMessage().equals(("")))
+                msg = error.getMessage();
+            startActivity(LoginActivity.newIntent(BorrowedBooksActivity.this, msg));
+            finish();
         }
     }
 }
