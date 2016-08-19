@@ -7,6 +7,6 @@ import com.book.renew.renovae.library.exception.RenewException;
  */
 public class OverdueRenewException extends RenewException {
     public OverdueRenewException(String message) {
-        super(message);
+        super(message, "Você tem livros em atraso");
     }
 }

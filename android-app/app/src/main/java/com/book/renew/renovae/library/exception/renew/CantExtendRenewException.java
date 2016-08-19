@@ -7,6 +7,6 @@ import com.book.renew.renovae.library.exception.RenewException;
  */
 public class CantExtendRenewException extends RenewException {
     public CantExtendRenewException(String message) {
-        super(message);
+        super(message, "Não foi possível estender o prazo");
     }
 }

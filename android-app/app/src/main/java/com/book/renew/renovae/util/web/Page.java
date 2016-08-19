@@ -1,5 +1,7 @@
 package com.book.renew.renovae.util.web;
 
+import com.book.renew.renovae.library.exception.network.NetworkException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -18,20 +20,20 @@ public class Page {
         POST, GET
     }
 
-    public Page(String url) throws IOException {
+    public Page(String url) throws NetworkException {
         this(url, Method.GET);
     }
-    public Page(String url, Method method) throws IOException {
+    public Page(String url, Method method) throws NetworkException {
         this(url, method, null);
     }
-    public Page(String url, List<Param> get_params) throws IOException {
+    public Page(String url, List<Param> get_params) throws NetworkException {
         this(url, Method.GET, get_params, null);
     }
-    public Page(String url,  Method method, List<Param> get_params) throws IOException {
+    public Page(String url,  Method method, List<Param> get_params) throws NetworkException {
         this(url, method, get_params, null);
     }
 
-    public Page(String url, Method method, List<Param> get_params, List<Param> post_params) throws IOException {
+    public Page(String url, Method method, List<Param> get_params, List<Param> post_params) throws NetworkException {
         //TODO: Network sign on
         HttpURLConnection conn = null;
         StringBuffer ret = new StringBuffer();
@@ -73,7 +75,8 @@ public class Page {
             while (line != null);
         }
         catch (IOException e) {
-            throw e;
+            e.printStackTrace();
+            throw new NetworkException(e.getMessage());
         }
 
         this.content = ret.toString();

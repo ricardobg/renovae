@@ -1,11 +1,12 @@
 package com.book.renew.renovae.library.impl.usp;
 
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
+import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.impl.Book;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.UnknownLoginException;
 import com.book.renew.renovae.util.web.Page;
 import com.book.renew.renovae.util.web.Param;
@@ -34,7 +35,7 @@ public class UspLibrary extends ILibrary {
 
     private String _login_url;
 
-    public UspLibrary() throws UnexpectedPageContent, IOException {
+    public UspLibrary() throws UnexpectedPageContentException, NetworkException {
         //First, download page and get the links
         Page homepage = new Page(HOMEPAGE);
         Elements login_button = homepage.getDoc().select("table:first-of-type > tbody > tr.middlebar > td.middlebar a.blue:matches(.*Sign-in.*");
@@ -43,7 +44,7 @@ public class UspLibrary extends ILibrary {
             //Não caiu na página Aleph
             Elements script = homepage.getDoc().select("html > head > script");
             if (script.size() != 1)
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             mt = FIND_LOGIN_PAGE.matcher(script.html());
         }
         else {
@@ -51,12 +52,12 @@ public class UspLibrary extends ILibrary {
             System.out.println(login_button.attr("href"));
         }
         if (!mt.matches())
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
         _login_url = mt.group(1);
     }
 
     @Override
-    public void login(String user, String password) throws IOException, LoginException, UnexpectedPageContent {
+    public void login(String user, String password) throws NetworkException, LoginException, UnexpectedPageContentException {
 
         Page login_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
@@ -76,13 +77,13 @@ public class UspLibrary extends ILibrary {
                 throw new UnknownLoginException();
         }
         if (user_page.size() > 1)
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
         //Usuário está logado
         System.out.println(login_page);
     }
 
     @Override
-    public ArrayList<IBorrow> getBorrowedBooks()  throws IOException, UnexpectedPageContent, LogoutException {
+    public ArrayList<IBorrow> getBorrowedBooks()  throws NetworkException, UnexpectedPageContentException, LogoutException {
         Page borrows_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),
@@ -95,31 +96,31 @@ public class UspLibrary extends ILibrary {
         //Primeiro pega número de empréstimos
         Elements m = borrows_page.getDoc().select("table > tbody > tr:only-of-type > td:only-of-type.td1 > a:matches(DEDALUS.*)");
         if (m.size() != 1)
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
         System.out.println(m.text());
         Matcher mt = FIND_NUMBER_OF_LOANS.matcher(m.text());
         if (!mt.matches())
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
         int n_borrows = Integer.parseInt(mt.group(1));
         if (n_borrows == 0)
             return new ArrayList<>();
         //Agora pega trs da tabela para pegar os empréstimos
         Elements trs = borrows_page.getDoc().select("table:last-of-type > tbody > tr:gt(0)");
         if (trs.size() != n_borrows)
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
 
         ArrayList<IBorrow> borrows = new ArrayList<>(n_borrows);
         for (Element tr : trs) {
             Elements tds = tr.select("td");
             if (tds.size() < 10)
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             Book book = new Book(tds.eq(3).text(), tds.eq(2).text());
             Date due_date = UspUtils.tryDateParse(tds.eq(5).text());
             String borrow_url = tds.eq(0).select("a").attr("href");
             /*Page borrow_page = new Page(borrow_url);
             Elements borrows_tr = borrow_page.getDoc().select("table:nth-last-of-type(2) > tbody > tr");
             if (borrows_tr.size() < 3)
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             Date borrow_date = UspUtils.tryDateParse(borrows_tr.eq(0).select("td").eq(1).text());
             String renew_url = borrows_tr.eq(2).select("td:eq(1) a").attr("href");*/
             borrows.add(new UspBorrow(book, due_date, borrow_url));
@@ -128,7 +129,7 @@ public class UspLibrary extends ILibrary {
     }
 
     @Override
-    public void logout()  throws IOError, UnexpectedPageContent {
+    public void logout()  throws NetworkException, UnexpectedPageContentException {
         //TODO: fazer logout
 
     }

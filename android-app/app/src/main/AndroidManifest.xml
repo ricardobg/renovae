@@ -16,21 +16,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".view.activity.StartActivity"
             android:label="@string/app_name">
-        </activity>
-        <activity
-            android:name=".activity.BorrowedBooksActivity"
-            android:label="Empréstimos" />
-        <activity android:name=".activity.BorrowItemActivity" />
-        <activity android:name=".activity.StartActivity"
-                  android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".view.activity.LoginActivity"
+            android:label="@string/app_name"></activity>
+        <activity android:name=".view.activity.BorrowItemActivity" />
+        <activity android:name=".view.activity.MainActivity"
+            android:label="@string/app_name"
+            ></activity>
     </application>
 
 </manifest>

@@ -1,10 +1,11 @@
 package com.book.renew.renovae.library.impl.fmu;
 
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
+import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.impl.Book;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.exception.renew.UnknownRenewException;
 import com.book.renew.renovae.util.web.Page;
 
@@ -24,12 +25,12 @@ public class FmuBorrow extends IBorrow {
         _borrow_link = borrow_link;
     }
     @Override
-    public void renew() throws IOException, UnexpectedPageContent, RenewException, LogoutException {
+    public void renew() throws NetworkException, UnexpectedPageContentException, RenewException, LogoutException {
         Page borrow_page = new Page(_borrow_link);
         System.out.println(_borrow_link);
         Elements borrows_tr = borrow_page.getDoc().select("table:nth-last-of-type(2) > tbody > tr");
         if (borrows_tr.size() < 3)
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
         Elements renew_a = borrows_tr.eq(2).select("td:eq(1) a");
         if (renew_a.isEmpty()) {
             //It is empty, error in renew
@@ -45,4 +46,11 @@ public class FmuBorrow extends IBorrow {
         if (feedback != null)
             throw new RenewException(feedback);
     }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        return compareTo((IBorrow) obj) == 0;
+    }
+
 }

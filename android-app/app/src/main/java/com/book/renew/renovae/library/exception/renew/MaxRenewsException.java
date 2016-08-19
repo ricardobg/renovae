@@ -7,6 +7,6 @@ import com.book.renew.renovae.library.exception.RenewException;
  */
 public class MaxRenewsException extends RenewException {
     public MaxRenewsException(String message) {
-        super(message);
+        super(message, "Máximo de renovações alcançado");
     }
 }

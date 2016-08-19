@@ -1,6 +1,6 @@
 package com.book.renew.renovae.library.impl.usp;
 
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.util.web.Page;
 
 import org.jsoup.Jsoup;
@@ -32,11 +32,11 @@ public class UspUtils {
         return null;
     }
 
-    public static Date tryDateParse(String date) throws UnexpectedPageContent {
+    public static Date tryDateParse(String date) throws UnexpectedPageContentException {
         try {
             return DATE_FORMAT.parse(date);
         } catch (ParseException e) {
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
         }
     }
 }

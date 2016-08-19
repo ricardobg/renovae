@@ -1,11 +1,12 @@
 package com.book.renew.renovae.library.impl.fmu;
 
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
+import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.impl.Book;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
 import com.book.renew.renovae.library.impl.usp.UspBorrow;
 import com.book.renew.renovae.util.web.Page;
 import com.book.renew.renovae.util.web.Param;
@@ -32,12 +33,12 @@ public class FmuLibrary extends ILibrary {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
     private String _login_url;
 
-    public FmuLibrary() throws UnexpectedPageContent, IOException {
+    public FmuLibrary() throws UnexpectedPageContentException, NetworkException {
         Page homepage = new Page(HOMEPAGE);
 
         Elements login_button = homepage.getDoc().select("table > tbody > tr.middlebar > td.middlebar a:matches(\\s*Login\\s*)");
         if (login_button.size() != 1)
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
 
         _login_url = login_button.attr("href");
         _login_url = _login_url.substring(0, _login_url.indexOf("?"));
@@ -45,7 +46,7 @@ public class FmuLibrary extends ILibrary {
     }
 
     @Override
-    public void login(String user, String password) throws IOException, UnexpectedPageContent, LoginException {
+    public void login(String user, String password) throws NetworkException, UnexpectedPageContentException, LoginException {
         Page login_page = new Page(_login_url, Page.Method.POST, null, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "login-session"),
@@ -66,12 +67,12 @@ public class FmuLibrary extends ILibrary {
         }
         Elements user_page = login_page.getDoc().select("table > tbody > tr.middlebar > td.middlebar > a:matches(\\s*Usu.rio\\s*)");
         if (user_page.size() > 1)
-            throw new UnexpectedPageContent();
+            throw new UnexpectedPageContentException();
         //Usuário está logado
     }
 
     @Override
-    public ArrayList<IBorrow> getBorrowedBooks() throws IOException, UnexpectedPageContent, LogoutException {
+    public ArrayList<IBorrow> getBorrowedBooks() throws NetworkException, UnexpectedPageContentException, LogoutException {
         Page borrows_page = new Page(_login_url, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),
@@ -82,24 +83,24 @@ public class FmuLibrary extends ILibrary {
         //Primeiro pega número de empréstimos
         Elements m = borrows_page.getDoc().select("table > tbody > tr:only-of-type > td:only-of-type.td1 > a:matches(Administrativa.*)");
         if (m.size() != 1)
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
         System.out.println(m.text());
         Matcher mt = FIND_NUMBER_OF_LOANS.matcher(m.text());
         if (!mt.matches())
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
         int n_borrows = Integer.parseInt(mt.group(1));
         if (n_borrows == 0)
             return new ArrayList<>();
         //Agora pega trs da tabela para pegar os empréstimos
         Elements trs = borrows_page.getDoc().select("table:last-of-type > tbody > tr:gt(0)");
         if (trs.size() != n_borrows)
-            throw  new UnexpectedPageContent();
+            throw  new UnexpectedPageContentException();
 
         ArrayList<IBorrow> borrows = new ArrayList<>(n_borrows);
         for (Element tr : trs) {
             Elements tds = tr.select("td");
             if (tds.size() < 10)
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             Book book = new Book(tds.eq(3).text().substring(0, tds.eq(3).text().indexOf('/') == -1 ? tds.eq(3).text().length() :
                     tds.eq(3).text().indexOf('/')), tds.eq(2).text());
             Date due_date = tryParse(tds.eq(5).text());
@@ -107,7 +108,7 @@ public class FmuLibrary extends ILibrary {
            /* Page borrow_page = new Page(borrow_url);
             Elements borrows_tr = borrow_page.getDoc().select("table:nth-last-of-type(2) > tbody > tr");
             if (borrows_tr.size() < 3)
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             Date borrow_date = tryParse(borrows_tr.eq(0).select("td").eq(1).text());*/
            // String renew_url = borrows_tr.eq(2).select("td:eq(1) a").attr("href");
             borrows.add(new UspBorrow(book, due_date, ""));
@@ -116,7 +117,7 @@ public class FmuLibrary extends ILibrary {
     }
 
     @Override
-    public void logout() throws IOException, UnexpectedPageContent {
+    public void logout() throws NetworkException, UnexpectedPageContentException {
 
     }
 
@@ -127,7 +128,7 @@ public class FmuLibrary extends ILibrary {
         return null;
     }
 
-    private static Date tryParse(String date) throws UnexpectedPageContent {
+    private static Date tryParse(String date) throws UnexpectedPageContentException {
         try {
             return DATETIME_FORMAT.parse(date);
         } catch (ParseException e) {
@@ -135,7 +136,7 @@ public class FmuLibrary extends ILibrary {
                 return DATE_FORMAT.parse(date);
             }
             catch (ParseException e2) {
-                throw new UnexpectedPageContent();
+                throw new UnexpectedPageContentException();
             }
         }
     }

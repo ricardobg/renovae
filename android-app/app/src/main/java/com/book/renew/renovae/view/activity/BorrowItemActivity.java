@@ -1,4 +1,4 @@
-package com.book.renew.renovae.activity;
+package com.book.renew.renovae.view.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

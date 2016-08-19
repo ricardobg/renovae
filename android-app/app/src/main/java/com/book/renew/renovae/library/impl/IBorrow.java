@@ -2,7 +2,8 @@ package com.book.renew.renovae.library.impl;
 
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.RenewException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
+import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.util.Util;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
         _due_date = due_date;
     }
 
-    public abstract void renew() throws IOException, UnexpectedPageContent, RenewException, LogoutException;
+    public abstract void renew() throws NetworkException, UnexpectedPageContentException, RenewException, LogoutException;
 
     public Book getBook() {
         return _book;
@@ -46,11 +47,9 @@ public abstract class IBorrow implements Serializable, Comparable<IBorrow> {
         if (cmp_due_date != 0)
             return cmp_due_date;
 
-        int cmp_borrow_date = _due_date.compareTo(cmp._due_date);
-        if (cmp_borrow_date != 0)
-            return cmp_borrow_date;
-
         return _book.compareTo(cmp._book);
     }
 
+    @Override
+    public abstract boolean equals(Object obj);
 }

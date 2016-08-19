@@ -1,4 +1,4 @@
-package com.book.renew.renovae.activity;
+package com.book.renew.renovae.view.activity;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -13,13 +13,13 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.book.renew.renovae.R;
 import com.book.renew.renovae.library.LibraryManager;
+import com.book.renew.renovae.library.exception.DefaultMessageException;
 import com.book.renew.renovae.library.exception.InvalidUniversityException;
 import com.book.renew.renovae.library.exception.LoginException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContent;
+import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.UnknownLoginException;
 import com.book.renew.renovae.library.LoginParameters;
 import com.book.renew.renovae.util.UserPreferences;
@@ -35,7 +35,6 @@ public class LoginActivity extends AppCompatActivity {
     private EditText _usernameEdit;
     private EditText _passwordEdit;
     private Spinner _universitiesSpinner;
-    private CheckBox _rememberMeCheckbox;
     private TextView _errorTextView;
 
 
@@ -50,7 +49,6 @@ public class LoginActivity extends AppCompatActivity {
         _usernameEdit = (EditText) findViewById(R.id.edit_username);
         _passwordEdit = (EditText) findViewById(R.id.edit_password);
         _universitiesSpinner = (Spinner) findViewById(R.id.spinner_universities);
-        _rememberMeCheckbox = (CheckBox) findViewById(R.id.checkbox_remember_me);
         _errorTextView = (TextView) findViewById(R.id.text_login_error);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
@@ -59,7 +57,6 @@ public class LoginActivity extends AppCompatActivity {
                 String university = String.valueOf(_universitiesSpinner.getSelectedItem());
                 String username = _usernameEdit.getText().toString();
                 String password = _passwordEdit.getText().toString();
-                boolean save = _rememberMeCheckbox.isChecked();
 
                 if (!LibraryManager.universityExists(university)) {
                     displayErrorMessage(getString(R.string.university_missing));
@@ -75,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
                     displayErrorMessage(getString(R.string.password_missing));
                     _passwordEdit.requestFocus();
                 }
-                (new LoginTask()).execute(new LoginParameters(username, password, university, save));
+                (new LoginTask()).execute(new LoginParameters(username, password, university));
 
             }
         });
@@ -95,8 +92,6 @@ public class LoginActivity extends AppCompatActivity {
             _usernameEdit.setText(login.username);
             _passwordEdit.setText(login.password);
             selectSpinnerItemByValue(_universitiesSpinner, login.university);
-            _rememberMeCheckbox.setChecked(true);
-            //(new LoginTask()).execute(new LoginParameters(login.username, login.password, login.university, false));
         }
         else {
             //Set the focus
@@ -172,32 +167,21 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Async task to do login
      */
-    private class LoginTask extends AsyncTask<LoginParameters, Void, String> {
+    private class LoginTask extends AsyncTask<LoginParameters, Void, DefaultMessageException> {
 
         private ProgressDialog _progress;
-        private LibraryManager _lib;
         @Override
         protected void onPreExecute() {
             _progress = ProgressDialog.show(LoginActivity.this, "", getString(R.string.login_in_progress));
         }
 
         @Override
-        protected String doInBackground(LoginParameters... params) {
+        protected DefaultMessageException doInBackground(LoginParameters... params) {
             try {
-                _lib = new LibraryManager(params[0], true);
+                LibraryManager.createAndLogin(params[0]);
                return null;
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println(e.getMessage());
-                return getString(R.string.io_error);
-            } catch (UnexpectedPageContent e) {
-                return getString(R.string.unexpected_content_error);
-            } catch (UnknownLoginException e) {
-                return getString(R.string.login_error);
-            } catch (LoginException e) {
-                return e.getMessage();
-            } catch (InvalidUniversityException e) {
-                return getString(R.string.invalid_university);
+            } catch (DefaultMessageException e) {
+                return e;
             }
         }
 
@@ -206,32 +190,16 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(DefaultMessageException error) {
             _progress.dismiss();
-            if (result != null)
-                displayErrorMessage(result);
+            if (error != null)
+                displayErrorMessage(error.getMessage());
             else {
-                if (_lib.getLoginParams().save)
-                    _preferences.updateLogin(_lib.getLoginParams());
-                startActivity(BorrowedBooksActivity.newIntent(LoginActivity.this, _lib));
+                _preferences.updateLogin(LibraryManager.get().getLoginParams());
+                startActivity(MainActivity.newIntent(LoginActivity.this));
                 finish();
             }
         }
-    }
-    public void handleException(Exception error) {
-        if (error instanceof UnexpectedPageContent)
-            displayErrorMessage("Erro na página");
-        else if (error instanceof IOException) {
-            if (!Util.hasInternetConnection(LoginActivity.this))
-                displayErrorMessage("Sem conexão com a internet");
-            else
-                displayErrorMessage("Site da biblioteca indisponível");
-        }
-        else if (error instanceof UnknownLoginException)
-            displayErrorMessage("Erro na página");
-        else if (error instanceof LoginException)
-            displayErrorMessage(error.getMessage());
-
     }
 
 }
