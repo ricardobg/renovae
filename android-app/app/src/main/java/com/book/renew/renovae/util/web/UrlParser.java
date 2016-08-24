@@ -2,6 +2,8 @@ package com.book.renew.renovae.util.web;
 
 import android.net.UrlQuerySanitizer;
 
+import java.util.List;
+
 /**
  * Class to parse url parameters and get values
  */

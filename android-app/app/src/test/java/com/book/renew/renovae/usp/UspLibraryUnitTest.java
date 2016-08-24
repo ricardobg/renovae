@@ -1,6 +1,7 @@
-package com.book.renew.renovae;
+package com.book.renew.renovae.usp;
 
 import com.book.renew.renovae.library.impl.usp.UspLibrary;
+import com.book.renew.renovae.util.web.Page;
 
 import org.junit.Test;
 
@@ -11,13 +12,8 @@ import org.junit.Test;
 public class UspLibraryUnitTest {
     @Test
     public void url() throws Exception {
+        Page.setCrawler(new UspTestCrawler());
         UspLibrary l = new UspLibrary();
-        l.login("8041992", "0604");
-     //   List<IBorrow> borrows = l.getBorrowedBooks();
-     //   for (IBorrow b : borrows) {
-     //       System.out.println(b);
-    //         b.renew();
-      //  }
     }
 
 

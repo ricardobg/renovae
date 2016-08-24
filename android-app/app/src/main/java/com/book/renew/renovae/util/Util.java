@@ -4,9 +4,15 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.book.renew.renovae.library.exception.network.NetworkException;
+import com.book.renew.renovae.util.web.ICrawler;
+import com.book.renew.renovae.util.web.Page;
+import com.book.renew.renovae.util.web.Param;
+import com.book.renew.renovae.util.web.WebCrawler;
+
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by ricardo on 28/07/16.
@@ -36,5 +42,4 @@ public class Util {
         return (int) ((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
     }
-
 }

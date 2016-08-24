@@ -3,7 +3,6 @@ package com.book.renew.renovae.library.impl.fmu;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.Book;
-import com.book.renew.renovae.library.impl.BorrowState;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.exception.LoginException;
