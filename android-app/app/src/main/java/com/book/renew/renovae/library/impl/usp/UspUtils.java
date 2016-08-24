@@ -1,5 +1,6 @@
 package com.book.renew.renovae.library.impl.usp;
 
+import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.util.web.Page;
 
@@ -38,5 +39,11 @@ public class UspUtils {
         } catch (ParseException e) {
             throw new UnexpectedPageContentException();
         }
+    }
+
+    public static void checkLogout(Page page) throws LogoutException {
+        Elements user_button = page.getDoc().select("table.tablebar > tbody > tr.topbar > td.topbar > a:matches(.*Usu.rio.*)");
+        if (user_button.size() == 0)
+            throw new LogoutException();
     }
 }

@@ -5,35 +5,38 @@ import android.os.Bundle;
 import com.book.renew.renovae.library.exception.InvalidUniversityException;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
-import com.book.renew.renovae.library.exception.RenewException;
+import com.book.renew.renovae.library.exception.renew.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.impl.fmu.FmuLibrary;
 import com.book.renew.renovae.library.impl.usp.UspLibrary;
-import com.book.renew.renovae.util.Util;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Created by ricardo on 03/08/16.
+ * Class to manage a Library
  */
-public class LibraryManager implements Serializable {
+public final class LibraryManager implements Serializable {
 
     private static final String EXTRA_LIBRARY_MANAGER =
             "com.book.renew.renovae.library_manager";
     private static LibraryManager _manager = null;
 
-
+    //Library being managed
     private ILibrary _library;
+    //Login parameters used to login
     private LoginParameters _login_params;
-    private ArrayList<IBorrow> _borrows = null;
+
+    private ArrayList<Borrow> _borrows = null;
 
     /**
      * Map with universities
@@ -76,6 +79,26 @@ public class LibraryManager implements Serializable {
         _manager = new LibraryManager(login_params, true);
     }
 
+    private void createLibrary() throws InvalidUniversityException, UnexpectedPageContentException, LoginException, NetworkException {
+        if (_library == null) {
+            Class<? extends ILibrary> library_class = universities.get(_login_params.university);
+            if (library_class != null) {
+                try {
+                    _library = library_class.newInstance();
+                } catch (InstantiationException e) {
+                    throw new InvalidUniversityException();
+                } catch (IllegalAccessException e) {
+                    throw new InvalidUniversityException();
+                } catch (Exception e) {
+                    //Exceptions throwable by the constructor
+                    throw e;
+                }
+                _library.login(_login_params.username, _login_params.password);
+            } else
+                throw new InvalidUniversityException();
+        }
+    }
+
     /**
      * Checks if Library is loaded. Try to load from savedInstance if it is not and returns if it could load
      * @param savedInstance
@@ -114,11 +137,11 @@ public class LibraryManager implements Serializable {
         return _login_params;
     }
 
-    public ArrayList<IBorrow> getCachedBorrows() {
+    public ArrayList<Borrow> getCachedBorrows() {
         return _borrows;
     }
 
-    public ArrayList<IBorrow> getBorrowedBooks() throws LogoutException, NetworkException, LoginException, InvalidUniversityException, UnexpectedPageContentException {
+    public ArrayList<Borrow> getBorrowedBooks() throws LogoutException, NetworkException, LoginException, InvalidUniversityException, UnexpectedPageContentException {
         return getBorrowedBooks(false);
     }
 
@@ -134,26 +157,6 @@ public class LibraryManager implements Serializable {
             createLibrary();
     }
 
-    private void createLibrary() throws InvalidUniversityException, UnexpectedPageContentException, LoginException, NetworkException {
-        if (_library == null) {
-            Class<? extends ILibrary> library_class = universities.get(_login_params.university);
-            if (library_class != null) {
-                try {
-                    _library = library_class.newInstance();
-                } catch (InstantiationException e) {
-                    throw new InvalidUniversityException();
-                } catch (IllegalAccessException e) {
-                    throw new InvalidUniversityException();
-                } catch (Exception e) {
-                    //Exceptions throwable by the constructor
-                    throw e;
-                }
-                _library.login(_login_params.username, _login_params.password);
-            } else
-                throw new InvalidUniversityException();
-        }
-    }
-
     private void relogin() throws UnexpectedPageContentException, LoginException, NetworkException, InvalidUniversityException {
         try {
             _library = _library.getClass().newInstance();
@@ -163,8 +166,9 @@ public class LibraryManager implements Serializable {
         _library.login(_login_params.username, _login_params.password);
     }
 
-    public ArrayList<IBorrow> getBorrowedBooks(boolean reload) throws InvalidUniversityException, UnexpectedPageContentException, LoginException, NetworkException {
+    public ArrayList<Borrow> getBorrowedBooks(boolean reload) throws InvalidUniversityException, UnexpectedPageContentException, LoginException, NetworkException {
         //TODO: get books in the database and if it is empty, load again
+        ArrayList<IBorrow> tempBorrows = new ArrayList<>();
         if (!reload && _borrows != null) {
 
         }
@@ -172,31 +176,81 @@ public class LibraryManager implements Serializable {
             //Not found in database or it needs to be reloaded
             createLibrary();
             try {
-                _borrows = _library.getBorrowedBooks();
+                tempBorrows = _library.loadBorrowsList();
             } catch (LogoutException e) {
                 //Logout: login again
                 relogin();
                 try {
-                    _borrows = _library.getBorrowedBooks();
+                    tempBorrows = _library.loadBorrowsList();
                 } catch (LogoutException e1) {
                     throw new UnexpectedPageContentException();
                 }
-
             }
+
+            //Now, loads each borrow info
+            final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+
+            final ArrayList<NetworkException> networkExceptions = new ArrayList<>();
+            final ArrayList<UnexpectedPageContentException> unexpectedPageContentExceptions = new ArrayList<>();
+            final ArrayList<LogoutException> logoutExceptions = new ArrayList<>();
+
+            for (final IBorrow b : tempBorrows) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                           b.load();
+                        } catch (NetworkException e) {
+                            synchronized (networkExceptions) {
+                                networkExceptions.add(e);
+                            }
+                        } catch (UnexpectedPageContentException e) {
+                            synchronized (unexpectedPageContentExceptions) {
+                                unexpectedPageContentExceptions.add(e);
+                            }
+                        } catch (LogoutException e) {
+                            synchronized (logoutExceptions) {
+                                logoutExceptions.add(e);
+                            }
+                        }
+                    }
+                });
+            }
+
+            try {
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+               throw new UnexpectedPageContentException(e.getMessage());
+            }
+
+            if (!logoutExceptions.isEmpty())
+                throw new UnexpectedPageContentException();
+            if (!unexpectedPageContentExceptions.isEmpty())
+                throw unexpectedPageContentExceptions.get(0);
+            if (!networkExceptions.isEmpty())
+                throw networkExceptions.get(0);
         }
+
+
         //TODO: save in the database
+
+        //Copy to Borrow List
+        _borrows = new ArrayList<>(tempBorrows.size());
+        for (IBorrow b : tempBorrows)
+            _borrows.add(new Borrow(b));
         return _borrows;
     }
 
-    public void renew(IBorrow borrow) throws RenewException, UnexpectedPageContentException, NetworkException, LoginException, InvalidUniversityException {
+    public void renew(Borrow borrow) throws RenewException, UnexpectedPageContentException, NetworkException, LoginException, InvalidUniversityException {
         createLibrary();
         try {
-            borrow.renew();
+            borrow.getBorrow().renew(_library);
         }
         catch (LogoutException e) {
             relogin();
             try {
-                borrow.renew();
+                borrow.getBorrow().renew(_library);
             } catch (LogoutException e1) {
                 throw new UnexpectedPageContentException();
             }

@@ -1,5 +1,7 @@
 package com.book.renew.renovae.library.exception;
 
+import com.book.renew.renovae.util.Util;
+
 /**
  * Exception with a Default message (in case of null or empty message)
  */
@@ -10,7 +12,7 @@ public class DefaultMessageException extends Exception {
      * @param default_message
      */
     protected DefaultMessageException(String message, String default_message) {
-        super((message == null || message.replaceAll("\\s+","").equals("")) ? default_message : message);
+        super(Util.isEmpty(message) ? default_message : message);
     }
 
     /**

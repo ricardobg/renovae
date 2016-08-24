@@ -1,4 +1,4 @@
-package com.book.renew.renovae.library.impl;
+package com.book.renew.renovae.library;
 
 import java.io.Serializable;
 
@@ -18,11 +18,9 @@ public class Book implements Serializable, Comparable<Book> {
     public String getTitle() {
         return _title;
     }
-
     public String getAuthors() {
         return _authors;
     }
-
     public int getEdition() {
         return _edition;
     }

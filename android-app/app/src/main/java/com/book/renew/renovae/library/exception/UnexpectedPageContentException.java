@@ -7,4 +7,7 @@ public class UnexpectedPageContentException extends DefaultMessageException {
     public UnexpectedPageContentException() {
         super("O site biblioteca fez algo não previsto :O");
     }
+    public UnexpectedPageContentException(String message) {
+        super(message, "O site biblioteca fez algo não previsto :O");
+    }
 }

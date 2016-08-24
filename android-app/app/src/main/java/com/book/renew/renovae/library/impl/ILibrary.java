@@ -27,13 +27,20 @@ public abstract class ILibrary implements Serializable {
     public abstract void login(String user, String password) throws NetworkException, UnexpectedPageContentException, LoginException;
 
     /**
-     * Get list of borrowed books
+     * Function that will be called to get borrows list
+     * Should access only a constant number of pages.
+     * Additional information of the borrow should be
+     * loaded in the load method of the borrow
      * @return
+     * @throws NetworkException
+     * @throws UnexpectedPageContentException
+     * @throws LogoutException
      */
-    public abstract ArrayList<IBorrow> getBorrowedBooks() throws NetworkException, UnexpectedPageContentException, LogoutException;
-
+    public abstract ArrayList<IBorrow> loadBorrowsList()
+            throws NetworkException, UnexpectedPageContentException, LogoutException;
     /**
      * Logout of the system
      */
     public abstract void logout() throws NetworkException, UnexpectedPageContentException;
+
 }
