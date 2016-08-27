@@ -1,15 +1,10 @@
-package com.book.renew.renovae.util.web;
+package com.book.renew.renovae.library.util.web;
 
 import com.book.renew.renovae.library.exception.network.NetworkException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 
 /**

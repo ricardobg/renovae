@@ -9,23 +9,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.book.renew.renovae.R;
-import com.book.renew.renovae.library.LibraryManager;
+import com.book.renew.renovae.android.LibraryManager;
+import com.book.renew.renovae.android.Util;
 import com.book.renew.renovae.library.exception.DefaultMessageException;
-import com.book.renew.renovae.library.exception.InvalidUniversityException;
-import com.book.renew.renovae.library.exception.LoginException;
-import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
-import com.book.renew.renovae.library.exception.UnknownLoginException;
-import com.book.renew.renovae.library.LoginParameters;
-import com.book.renew.renovae.util.UserPreferences;
-import com.book.renew.renovae.util.Util;
+import com.book.renew.renovae.android.LoginParameters;
+import com.book.renew.renovae.android.UserPreferences;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -203,3 +197,4 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 }
+

@@ -4,21 +4,23 @@ package com.book.renew.renovae.library.impl.usp;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;
-import com.book.renew.renovae.library.Book;
+import com.book.renew.renovae.library.impl.Book;
 import com.book.renew.renovae.library.exception.renew.CantRenewCause;
 import com.book.renew.renovae.library.exception.renew.RenewException;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.util.Util;
-import com.book.renew.renovae.util.web.Page;
-import com.book.renew.renovae.util.web.Param;
-import com.book.renew.renovae.util.web.UrlParser;
+import com.book.renew.renovae.library.util.web.Page;
+import com.book.renew.renovae.library.util.web.Param;
+import com.book.renew.renovae.library.util.web.UrlParser;
 
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UspBorrow extends IBorrow {
 
@@ -26,6 +28,7 @@ public class UspBorrow extends IBorrow {
     private final String _itemSequence;
     private static final int MAX_RENEWS = 3;
     private static final int RENOVATION_DAYS = 10;
+    public static final Pattern GET_BOOK_ISBN = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*", Pattern.MULTILINE | Pattern.DOTALL);
 
     public UspBorrow(Book book, Date due_date,
                      String borrowLink) {
@@ -40,9 +43,9 @@ public class UspBorrow extends IBorrow {
     public void load(ILibrary library)
             throws NetworkException, UnexpectedPageContentException, LogoutException {
 
-
+        UspLibrary uspLibrary = ((UspLibrary) library);
         int renovations = 0;
-        Page borrow_page = new Page(((UspLibrary) library).getBaseUrl(),  Arrays.asList(
+        Page borrow_page = new Page(uspLibrary.getBaseUrl(), Arrays.asList(
                 new Param("func", "bor-loan-exp"),
                 new Param("doc_number", getDocNumber()),
                 new Param("item_sequence", getItemSequence()),
@@ -94,6 +97,44 @@ public class UspBorrow extends IBorrow {
             _cause = null;
         }
         _renovations = renovations;
+
+        //Now try to find Book
+        Elements barcodeElement = borrow_page.getDoc().select("table:last-of-type > tbody > tr:last-of-type td:last-of-type");
+        System.out.println("Trying to find barcode");
+        if (barcodeElement.size() == 1) {
+            System.out.println("Found td + " + barcodeElement.text());
+            String barcode = barcodeElement.text();
+            if (!barcode.equals("")) {
+                Page bookPage = new Page(uspLibrary.getBaseUrl(), Arrays.asList(
+                        new Param("func", "find-b"),
+                        new Param("request", barcode),
+                        new Param("find_code", "BAR"),
+                        new Param("local_base", "USP01")
+                ));
+                System.out.println(bookPage.getDoc().select("table:nth-last-of-type(3)"));
+                Elements isbnTd = bookPage.getDoc().select("table:nth-last-of-type(3) > tbody > tr > td:first-of-type:matches(.*ISBN.*)");
+                if (isbnTd.size() == 0) {
+                    //Caiu na página errada
+                    Elements linkToBook = bookPage.getDoc().select("table:nth-last-of-type(2) > tbody > tr > " +
+                            "td:first-of-type > table:first-of-type > tbody > tr:nth-of-type(2) > td:first-of-type > a");
+                    if (linkToBook.size() == 0)
+                        return;
+                    bookPage = new Page(linkToBook.attr("href"));
+                    isbnTd = bookPage.getDoc().select("table:nth-last-of-type(3) > tbody > tr > td:first-of-type:matches(.*ISBN.*)");
+                }
+                if (isbnTd.size() != 0) {
+                    System.out.println("Found ISBN!");
+                    System.out.println(isbnTd.get(0).parent());
+                    String rawIsbn = isbnTd.get(0).parent().select("td:last-of-type").text();
+                    System.out.println("RawISBN" + rawIsbn);
+                    Matcher matcher = GET_BOOK_ISBN.matcher(rawIsbn);
+                    if (matcher.matches()) {
+                        String isbn = matcher.group(1);
+                        _book.setIsbn(isbn);
+                    }
+                }
+            }
+        }
     }
 
     private String getDocNumber() {

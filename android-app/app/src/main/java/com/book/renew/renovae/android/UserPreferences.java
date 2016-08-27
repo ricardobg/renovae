@@ -1,9 +1,7 @@
-package com.book.renew.renovae.util;
+package com.book.renew.renovae.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
-import com.book.renew.renovae.library.LoginParameters;
 
 
 /**

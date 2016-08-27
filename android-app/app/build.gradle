@@ -19,16 +19,17 @@ android {
     }
 }
 
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+
     testCompile 'junit:junit:4.12'
-    testCompile 'org.powermock:powermock-api-mockito:1.6.1'
-    testCompile 'org.powermock:powermock-module-junit4-rule-agent:1.6.1'
-    testCompile 'org.powermock:powermock-module-junit4-rule:1.6.1'
-    testCompile 'org.powermock:powermock-module-junit4:1.6.1'
     compile 'org.jsoup:jsoup:1.9.2'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:recyclerview-v7:24.1.1'
-    compile 'com.android.support:support-v4:24.1.1'
-    compile 'com.android.support:design:24.1.1'
+    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.android.support:recyclerview-v7:24.2.0'
+    compile 'com.android.support:support-v4:24.2.0'
+    compile 'com.android.support:design:24.2.0'
+    compile 'com.google.apis:google-api-services-books:v1-rev86-1.22.0'
+
+    compile 'com.yqritc:recyclerview-flexibledivider:1.4.0'
 }

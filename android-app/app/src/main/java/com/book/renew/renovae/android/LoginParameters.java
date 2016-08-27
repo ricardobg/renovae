@@ -1,4 +1,4 @@
-package com.book.renew.renovae.library;
+package com.book.renew.renovae.android;
 
 import java.io.Serializable;
 

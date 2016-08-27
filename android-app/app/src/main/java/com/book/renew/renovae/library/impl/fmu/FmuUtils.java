@@ -2,7 +2,7 @@ package com.book.renew.renovae.library.impl.fmu;
 
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
-import com.book.renew.renovae.util.web.Page;
+import com.book.renew.renovae.library.util.web.Page;
 
 import org.jsoup.select.Elements;
 
@@ -18,7 +18,7 @@ public class FmuUtils {
 
     public static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd/MM/yy HH:mm");
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
-    public static final Pattern FIND_RENOVATIONS = Pattern.compile("^\\s*Renovação\\s+([0-9]+)\\s+de\\s+([0-9]+)\\s*$", Pattern.MULTILINE | Pattern.DOTALL);
+    public static final Pattern FIND_RENOVATIONS = Pattern.compile("^\\s*Renova..o\\s+([0-9]+)\\s+de\\s+([0-9]+)\\s*$", Pattern.MULTILINE | Pattern.DOTALL);
 
     public static String getFeedback(Page page) {
         Elements feedback =  page.getDoc().select("table > tbody > tr > td.feedbackbar");
@@ -43,7 +43,7 @@ public class FmuUtils {
     public static void checkLogout(Page page)
             throws LogoutException {
         Elements login_button = page.getDoc().select("table > tbody > tr.middlebar > td.middlebar a:matches(\\s*Login\\s*)");
-        if (login_button.isEmpty())
+        if (!login_button.isEmpty())
             throw new LogoutException();
     }
 }

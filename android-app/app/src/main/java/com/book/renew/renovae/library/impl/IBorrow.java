@@ -1,7 +1,6 @@
 package com.book.renew.renovae.library.impl;
 
 
-import com.book.renew.renovae.library.Book;
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;

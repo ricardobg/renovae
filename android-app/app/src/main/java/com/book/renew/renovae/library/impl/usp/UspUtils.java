@@ -2,7 +2,7 @@ package com.book.renew.renovae.library.impl.usp;
 
 import com.book.renew.renovae.library.exception.LogoutException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
-import com.book.renew.renovae.util.web.Page;
+import com.book.renew.renovae.library.util.web.Page;
 
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;

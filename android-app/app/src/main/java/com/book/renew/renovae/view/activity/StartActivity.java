@@ -3,8 +3,8 @@ package com.book.renew.renovae.view.activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.book.renew.renovae.library.LoginParameters;
-import com.book.renew.renovae.util.UserPreferences;
+import com.book.renew.renovae.android.LoginParameters;
+import com.book.renew.renovae.android.UserPreferences;
 
 /**
  * Start activity of the app

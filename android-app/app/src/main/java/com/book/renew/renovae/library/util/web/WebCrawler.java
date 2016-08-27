@@ -1,8 +1,10 @@
-package com.book.renew.renovae.util.web;
+package com.book.renew.renovae.library.util.web;
 
 import com.book.renew.renovae.library.exception.network.NetworkException;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -20,6 +22,7 @@ public class WebCrawler implements ICrawler {
         //TODO: Network sign on
         HttpURLConnection conn = null;
         StringBuffer ret = new StringBuffer();
+        BufferedReader reader = null;
         try {
             //Read GET parameters
             if (get_params != null && get_params.size() > 0) {
@@ -49,17 +52,26 @@ public class WebCrawler implements ICrawler {
                 conn.setRequestMethod("GET");
 
             InputStreamReader input = new InputStreamReader(conn.getInputStream());
-            BufferedReader reader = new BufferedReader(input);
+            reader = new BufferedReader(input);
             String line = "";
             do {
                 line = reader.readLine();
                 ret.append(line);
             }
             while (line != null);
+
         }
         catch (IOException e) {
             e.printStackTrace();
             throw new NetworkException(e.getMessage());
+        }
+        finally {
+            if (reader != null)
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    throw new NetworkException(e.getMessage());
+                }
         }
         return ret.toString();
     }

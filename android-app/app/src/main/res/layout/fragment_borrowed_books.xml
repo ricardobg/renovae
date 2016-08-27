@@ -2,7 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.fragment.BorrowedBooksFragment">
+    tools:context=".view.fragment.BorrowedBooksFragment"
+    android:layout_margin="0dp"
+    android:padding="0dp"
+    >
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
@@ -11,7 +14,6 @@
         android:scrollbars="vertical"
         >
         <android.support.v7.widget.RecyclerView
-            android:layout_margin="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/recycler_view_borrows"

@@ -1,4 +1,4 @@
-package com.book.renew.renovae.library.impl.usp;
+package com.book.renew.renovae.library.impl.unesp;
 
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;
@@ -26,10 +26,9 @@ import java.util.regex.Pattern;
 /**
  * Created by ricardo on 27/07/16.
  */
-public class UspLibrary extends ILibrary {
+public class UnespLibrary extends ILibrary {
 
-    public static final String HOMEPAGE = "http://dedalus.usp.br/F";
-    public static final Pattern FIND_LOGIN_PAGE = Pattern.compile(".*\\&url=([^\']+)\\?.*", Pattern.MULTILINE | Pattern.DOTALL);
+    public static final String HOMEPAGE = "http://www.athena.biblioteca.unesp.br/F";
     public static final Pattern FIND_LOGIN_PAGE_ALT = Pattern.compile("([^\\?]+)\\?.*", Pattern.MULTILINE | Pattern.DOTALL);
     public static final Pattern FIND_NUMBER_OF_LOANS = Pattern.compile("^\\s*DEDALUS\\s*\\-\\s*([0-9]+)\\s*$", Pattern.MULTILINE | Pattern.DOTALL);
 
@@ -39,49 +38,38 @@ public class UspLibrary extends ILibrary {
         return _baseUrl;
     }
 
-    public UspLibrary() throws UnexpectedPageContentException, NetworkException {
+    public UnespLibrary() throws UnexpectedPageContentException, NetworkException {
         //First, download page and get the links
         Page homepage = new Page(HOMEPAGE);
-        Elements login_button = homepage.getDoc().select("table:first-of-type > tbody > tr.middlebar > td.middlebar a.blue:matches(.*Sign-in.*");
-        Matcher mt = null;
-        if (login_button.size() != 1) {
-            //Não caiu na página Aleph
-            Elements script = homepage.getDoc().select("html > head > script");
-            if (script.size() != 1)
-                throw new UnexpectedPageContentException();
-            mt = FIND_LOGIN_PAGE.matcher(script.html());
-        }
-        else {
-            mt = FIND_LOGIN_PAGE_ALT.matcher(login_button.attr("href"));
-        }
-        if (!mt.matches())
-            throw new UnexpectedPageContentException();
-        _baseUrl = mt.group(1);
-        Util.log("Dedalus URL: " + _baseUrl);
+        Elements loginButton = homepage.getDoc().select("table:first-of-type > tbody > tr.middlebar > td.middlebar a.blue:matches(\\s*Identificação\\s*)");
+        String rawUrl = loginButton.attr("href");
+        _baseUrl = rawUrl.substring(0, rawUrl.indexOf('?'));
+
+        Util.log("ATHENA URL: " + _baseUrl);
     }
 
     @Override
     public void login(String user, String password) throws NetworkException, LoginException, UnexpectedPageContentException {
 
-        Page login_page = new Page(_baseUrl, new ArrayList<Param>(
+        Page loginPage = new Page(_baseUrl, Page.Method.POST, null, new ArrayList<>(
                 Arrays.asList(
+                        new Param("ssl_flag", "Y"),
                         new Param("func", "login-session"),
+                        new Param("login_source", "LOGIN-BOR"),
                         new Param("bor_id", user),
                         new Param("bor_verification", password),
-                        new Param("bor_library", "USP50")
+                        new Param("bor_library", "UEP50")
                 )
         ));
         //Tenta achar botão para ir ao usuário
-        Elements user_page = login_page.getDoc().select("table.tablebar > tbody > tr.topbar > td.topbar > a:matches(.*Usu.rio.*)");
-        if (user_page.isEmpty()) {
-            String feedback = UspUtils.getFeedback(login_page);
+        Elements loginButton = loginPage.getDoc().select("table:first-of-type > tbody > tr.middlebar > td.middlebar > a:matches(.*Identificação.*)");
+        if (!loginButton.isEmpty()) {
+            String feedback = UnespUtils.getFeedback(loginPage);
             if (feedback != null)
                 throw new LoginException(feedback);
             else
                 throw new UnknownLoginException();
         }
-        if (user_page.size() > 1)
-            throw new UnexpectedPageContentException();
         //Usuário está logado
         Util.log("Logged in");
     }
@@ -89,7 +77,7 @@ public class UspLibrary extends ILibrary {
     @Override
     public ArrayList<IBorrow> loadBorrowsList()
             throws NetworkException, UnexpectedPageContentException, LogoutException {
-        Page borrows_page = new Page(_baseUrl, new ArrayList<Param>(
+     /*   Page borrows_page = new Page(_baseUrl, new ArrayList<Param>(
                 Arrays.asList(
                         new Param("func", "bor-loan"),
                         new Param("adm_library", "USP50")
@@ -122,7 +110,8 @@ public class UspLibrary extends ILibrary {
             String borrow_url = tds.eq(0).select("a").attr("href");
             borrows.add(new UspBorrow(book, due_date, borrow_url));
         }
-        return borrows;
+        return borrows;*/
+        return new ArrayList<>();
     }
 
     @Override

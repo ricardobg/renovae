@@ -1,24 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/relativelayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_height="88dp"
+    android:padding="0dp"
+    android:layout_margin="4dp"
     android:orientation="horizontal"
+    android:background="@drawable/rectangle"
     >
+    <ProgressBar
+        android:id="@+id/book_cover_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_alignParentLeft="true"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        android:indeterminate="true" />
+    <ProgressBar
+        android:id="@+id/borrow_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
 
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        android:indeterminate="true" />
     <ImageView
-        android:id="@+id/book_cover"
-        android:layout_width="50dp"
-        android:layout_height="67dp"
+        android:id="@+id/book_cover_image"
+        android:layout_width="72dp"
+        android:layout_height="88dp"
+        android:layout_margin="0dp"
+        android:padding="12dp"
         android:src="@drawable/book_default_cover" />
     <LinearLayout
-        android:layout_toRightOf="@id/book_cover"
+        android:layout_toLeftOf="@+id/myFAB"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:layout_marginRight="38dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="72dp"
+        android:padding="0dp"
         android:orientation="vertical"
         android:id="@+id/book_linear_layout"
         >
@@ -26,32 +48,65 @@
                 android:id="@+id/borrow_book_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:textStyle="bold"
-                android:text="Introdução à Economia sadffsda ffasd fsda dfs dasdffsda asdf"
-                android:textColor="#000000" />
+                android:textSize="16sp"
+                android:fontFamily="sans-serif"
+                android:text="..."
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="#ffffff"
+                />
             <TextView
                 android:id="@+id/borrow_book_authors"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="30dp"
-                android:text="Autores do livro de economia"
-                android:textColor="#bbbbbb" />
+                android:fontFamily="sans-serif"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="..."
+
+                android:textColor="#89ffffff"
+                 />
             <TextView
                 android:id="@+id/borrow_due_date"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
 
-                android:text="Devolver em 20/10/16"
-                android:textColor="#000000" />
+                android:textSize="14sp"
+                android:text="..."
+
+                android:textColor="#ccffffff"
+                />
         </LinearLayout>
-        <ImageView
-            android:id="@+id/renew_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="18dp"
-            android:layout_alignParentRight="true"
-            android:src="@drawable/ic_autorenew_red_900_48dp" />
+    <Button
+        android:id="@+id/myFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="false"
 
+        android:layout_margin="12dp"
+        android:padding="10dp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:textSize="10sp"
+        android:text="RenovAE"
+        android:background="#FFFFFF"
+        android:textAllCaps="false"
+
+        ></Button>
+
+    <ProgressBar
+        android:id="@+id/renew_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="false"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        android:indeterminate="true" />
 </RelativeLayout>

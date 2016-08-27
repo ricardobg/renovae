@@ -1,4 +1,4 @@
-package com.book.renew.renovae.util.web;
+package com.book.renew.renovae.library.util.web;
 
 import com.book.renew.renovae.library.exception.network.NetworkException;
 

@@ -1,5 +1,6 @@
-package com.book.renew.renovae.library;
+package com.book.renew.renovae.android;
 
+import com.book.renew.renovae.library.impl.Book;
 import com.book.renew.renovae.library.exception.renew.CantRenewCause;
 import com.book.renew.renovae.library.impl.IBorrow;
 
@@ -42,4 +43,13 @@ public final class Borrow implements Serializable, Comparable<Borrow>  {
         return getBook().compareTo(cmp.getBook());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return _borrow.equals(((Borrow) obj)._borrow);
+    }
+
+    @Override
+    public String toString() {
+        return _borrow.toString();
+    }
 }

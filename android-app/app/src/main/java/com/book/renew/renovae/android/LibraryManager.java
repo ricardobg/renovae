@@ -1,24 +1,34 @@
-package com.book.renew.renovae.library;
+package com.book.renew.renovae.android;
 
 import android.os.Bundle;
+import android.util.Log;
 
+import com.book.renew.renovae.library.exception.DefaultMessageException;
 import com.book.renew.renovae.library.exception.InvalidUniversityException;
 import com.book.renew.renovae.library.exception.LoginException;
 import com.book.renew.renovae.library.exception.LogoutException;
+import com.book.renew.renovae.library.exception.network.LibraryUnavailableException;
+import com.book.renew.renovae.library.exception.network.NoInternetException;
 import com.book.renew.renovae.library.exception.renew.RenewException;
 import com.book.renew.renovae.library.exception.UnexpectedPageContentException;
 import com.book.renew.renovae.library.exception.network.NetworkException;
 import com.book.renew.renovae.library.impl.IBorrow;
 import com.book.renew.renovae.library.impl.ILibrary;
 import com.book.renew.renovae.library.impl.fmu.FmuLibrary;
+import com.book.renew.renovae.library.impl.test.TestLibrary;
+import com.book.renew.renovae.library.impl.unesp.UnespLibrary;
 import com.book.renew.renovae.library.impl.usp.UspLibrary;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +56,8 @@ public final class LibraryManager implements Serializable {
         {
             put("USP", UspLibrary.class);
             put("FMU", FmuLibrary.class);
+            put("UNESP", UnespLibrary.class);
+            put("TEST", TestLibrary.class);
         }
     };
 
@@ -167,6 +179,7 @@ public final class LibraryManager implements Serializable {
     }
 
     public ArrayList<Borrow> getBorrowedBooks(boolean reload) throws InvalidUniversityException, UnexpectedPageContentException, LoginException, NetworkException {
+
         //TODO: get books in the database and if it is empty, load again
         ArrayList<IBorrow> tempBorrows = new ArrayList<>();
         if (!reload && _borrows != null) {
@@ -179,6 +192,7 @@ public final class LibraryManager implements Serializable {
                 tempBorrows = _library.loadBorrowsList();
             } catch (LogoutException e) {
                 //Logout: login again
+                System.out.println("[LIBRARY MANAGER] LOGOUT");
                 relogin();
                 try {
                     tempBorrows = _library.loadBorrowsList();
@@ -188,50 +202,43 @@ public final class LibraryManager implements Serializable {
             }
 
             //Now, loads each borrow info
-            final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
-            final ArrayList<NetworkException> networkExceptions = new ArrayList<>();
-            final ArrayList<UnexpectedPageContentException> unexpectedPageContentExceptions = new ArrayList<>();
-            final ArrayList<LogoutException> logoutExceptions = new ArrayList<>();
-
+            ArrayList<Callable<Object>> executeList = new ArrayList<>(tempBorrows.size());
             for (final IBorrow b : tempBorrows) {
-                executor.execute(new Runnable() {
+                executeList.add(new Callable<Object>() {
                     @Override
-                    public void run() {
-                        try {
-                           b.load();
-                        } catch (NetworkException e) {
-                            synchronized (networkExceptions) {
-                                networkExceptions.add(e);
-                            }
-                        } catch (UnexpectedPageContentException e) {
-                            synchronized (unexpectedPageContentExceptions) {
-                                unexpectedPageContentExceptions.add(e);
-                            }
-                        } catch (LogoutException e) {
-                            synchronized (logoutExceptions) {
-                                logoutExceptions.add(e);
-                            }
-                        }
+                    public Object call() throws Exception {
+                        b.load(_library);
+                        return null;
                     }
                 });
             }
-
             try {
-                executor.awaitTermination(10, TimeUnit.SECONDS);
+                for (Future<Object> future : executor.invokeAll(executeList)) {
+                    future.get();
+                }
             } catch (InterruptedException e) {
-                e.printStackTrace();
-               throw new UnexpectedPageContentException(e.getMessage());
+                throw new UnexpectedPageContentException(e.getMessage());
+            } catch (ExecutionException e) {
+                try {
+                    throw e.getCause();
+                } catch (InvalidUniversityException e1) {
+                    throw e1;
+                }
+                catch (NetworkException e1) {
+                    throw e1;
+                }
+                catch (UnexpectedPageContentException e1) {
+                    throw e1;
+                }
+                catch (LoginException e1) {
+                    throw e1;
+                } catch (Throwable throwable) {
+                    throw new UnexpectedPageContentException(e.getMessage());
+                }
             }
-
-            if (!logoutExceptions.isEmpty())
-                throw new UnexpectedPageContentException();
-            if (!unexpectedPageContentExceptions.isEmpty())
-                throw unexpectedPageContentExceptions.get(0);
-            if (!networkExceptions.isEmpty())
-                throw networkExceptions.get(0);
         }
-
 
         //TODO: save in the database
 

@@ -2,13 +2,10 @@ package com.book.renew.renovae.view.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.PersistableBundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,10 +13,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.book.renew.renovae.R;
-import com.book.renew.renovae.library.LibraryManager;
-import com.book.renew.renovae.library.LoginParameters;
-import com.book.renew.renovae.util.UserPreferences;
-import com.book.renew.renovae.util.Util;
+import com.book.renew.renovae.android.LibraryManager;
+import com.book.renew.renovae.android.LoginParameters;
+import com.book.renew.renovae.android.UserPreferences;
+import com.book.renew.renovae.android.Util;
 import com.book.renew.renovae.view.fragment.BorrowedBooksFragment;
 
 import java.util.ArrayList;
@@ -69,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
             LibraryManager.create(loginParameters);
         }
 
+        /* Load fragment */
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment mainFragment = fragmentManager.findFragmentById(R.id.main_fragment_container);
         //Put right main fragment
